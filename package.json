@@ -2,7 +2,7 @@
   "name": "git-merge-helper",
   "displayName": "Git合并助手",
   "description": "自动化Git分支合并流程的VSCode插件",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "publisher": "Leo-Wei105",
   "repository": {
     "type": "git",
@@ -24,17 +24,7 @@
         "gitMergeHelper.mainBranch": {
           "type": "string",
           "default": "master",
-          "enum": [
-            "master",
-            "main",
-            "release"
-          ],
-          "description": "主分支名称（用于新建分支的基础分支）",
-          "enumDescriptions": [
-            "使用master作为主分支",
-            "使用main作为主分支",
-            "使用release作为主分支"
-          ]
+          "description": "主分支名称（用于新建分支的基础分支）"
         },
         "gitMergeHelper.targetBranches": {
           "type": "array",
@@ -66,6 +56,33 @@
             ]
           },
           "description": "可选的目标分支列表，支持自定义添加更多分支"
+        },
+        "gitMergeHelper.featureBranchConfig": {
+          "type": "object",
+          "default": {
+            "patterns": [
+              "feature",
+              "feat",
+              "bugfix",
+              "hotfix",
+              "fix"
+            ],
+            "description": "功能分支命名模式"
+          },
+          "properties": {
+            "patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "功能分支命名模式列表"
+            },
+            "description": {
+              "type": "string",
+              "description": "配置描述"
+            }
+          },
+          "description": "功能分支命名规则配置，用于识别哪些分支可以进行合并操作"
         },
         "gitMergeHelper.autoDetectMainBranch": {
           "type": "boolean",
