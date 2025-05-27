@@ -23,11 +23,16 @@
         "gitMergeHelper.mainBranch": {
           "type": "string",
           "default": "master",
-          "enum": ["master", "main"],
-          "description": "主分支名称（用于合并的基础分支）",
+          "enum": [
+            "master",
+            "main",
+            "release"
+          ],
+          "description": "主分支名称（用于新建分支的基础分支）",
           "enumDescriptions": [
             "使用master作为主分支",
-            "使用main作为主分支"
+            "使用main作为主分支",
+            "使用release作为主分支"
           ]
         },
         "gitMergeHelper.targetBranches": {
@@ -54,7 +59,10 @@
                 "description": "分支描述"
               }
             },
-            "required": ["name", "description"]
+            "required": [
+              "name",
+              "description"
+            ]
           },
           "description": "可选的目标分支列表，支持自定义添加更多分支"
         },
