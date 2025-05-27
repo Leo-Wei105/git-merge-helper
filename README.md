@@ -7,19 +7,12 @@
 - 🚀 **自动化合并流程**：一键完成Feature分支到主分支的合并
 - ⚡ **快速提交合并**：快速提交当前更改并合并到目标分支
 - 🎯 **智能分支检测**：自动检测当前分支状态和Git仓库信息
-- 🔧 **灵活配置管理**：支持自定义主分支（main/master）和目标分支配置
+- 🔧 **灵活配置管理**：支持自定义主分支（main/master/release）和目标分支配置
 - 🔄 **多种调用方式**：支持命令面板、右键菜单、SCM面板等多种方式
 - 📝 **友好提示**：详细的操作提示和错误信息
 - 🛡️ **安全检查**：合并前自动检查分支状态和冲突
 
 ## 🚀 快速开始
-
-### 安装
-
-1. 下载最新的 `.vsix` 文件
-2. 在VSCode中按 `Ctrl+Shift+P` 打开命令面板
-3. 输入 `Extensions: Install from VSIX...`
-4. 选择下载的 `.vsix` 文件进行安装
 
 ### 使用方法
 
@@ -60,8 +53,8 @@
 
 ### 配置管理
 灵活的配置管理功能：
-1. **主分支设置**：选择使用main或master作为主分支
-2. **自动检测**：自动检测远程仓库的主分支名称
+1. **主分支设置**：选择使用main或master或release作为主分支
+2. **自动检测**：自动检测远程仓库的主分支名称(默认开启，可关闭)
 3. **目标分支管理**：添加、删除、查看目标分支
 4. **配置重置**：一键恢复默认配置
 
@@ -121,63 +114,6 @@
 }
 ```
 
-## 🔧 开发和构建
-
-### 开发环境设置
-
-```bash
-# 克隆项目
-git clone https://github.com/Leo-Wei105/git-merge-helper.git
-cd git-merge-helper
-
-# 安装依赖
-npm install
-
-# 编译代码
-npm run compile
-
-# 监听文件变化（开发模式）
-npm run watch
-```
-
-### 版本管理
-
-项目支持自动版本升级和CHANGELOG管理：
-
-```bash
-# 升级patch版本（修复）
-npm run version:patch
-
-# 升级minor版本（新功能）
-npm run version:minor
-
-# 升级major版本（重大更改）
-npm run version:major
-```
-
-### 打包发布
-
-```bash
-# 交互式打包（推荐）
-npm run package
-
-# 快速打包
-npm run package:patch  # 升级patch版本并打包
-npm run package:minor  # 升级minor版本并打包
-npm run package:major  # 升级major版本并打包
-
-# 仅构建（不升级版本）
-npm run build
-```
-
-交互式打包工具会引导您：
-1. 选择版本升级类型
-2. 输入发布说明
-3. 确认打包信息
-4. 自动执行完整流程
-
-详细的构建说明请参考 [BUILD.md](BUILD.md)。
-
 ## 📝 更新日志
 
 查看 [CHANGELOG.md](CHANGELOG.md) 了解版本更新历史。
@@ -193,5 +129,3 @@ MIT License - 查看 [LICENSE](LICENSE) 文件了解详情。
 ## 🔗 相关链接
 
 - [GitHub仓库](https://github.com/Leo-Wei105/git-merge-helper)
-- [使用指南](USAGE.md)
-- [构建指南](BUILD.md) 
