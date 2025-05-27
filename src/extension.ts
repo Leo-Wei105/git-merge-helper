@@ -50,9 +50,31 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // 注册配置管理命令
+    const manageConfigurationCommand = vscode.commands.registerCommand(
+        'gitMergeHelper.manageConfiguration',
+        async () => {
+            try {
+                // 检查是否有工作区
+                if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+                    vscode.window.showErrorMessage('请先打开一个工作区文件夹');
+                    return;
+                }
+
+                const gitMergeService = new GitMergeService();
+                await gitMergeService.manageConfiguration();
+            } catch (error: any) {
+                const errorMessage = error.message || '未知错误';
+                vscode.window.showErrorMessage(`配置失败: ${errorMessage}`);
+                console.error('配置失败:', error);
+            }
+        }
+    );
+
     // 将命令添加到上下文订阅中
     context.subscriptions.push(mergeFeatureBranchCommand);
     context.subscriptions.push(quickCommitAndMergeCommand);
+    context.subscriptions.push(manageConfigurationCommand);
 
     // 只在有工作区时显示激活消息
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {

@@ -7,6 +7,14 @@ import * as vscode from 'vscode';
 const execAsync = promisify(exec);
 
 /**
+ * 目标分支配置接口
+ */
+interface TargetBranchConfig {
+    name: string;
+    description: string;
+}
+
+/**
  * Git合并服务类
  * 提供自动化的Git分支合并功能
  */
@@ -26,6 +34,54 @@ export class GitMergeService {
         if (!fs.existsSync(gitDir)) {
             throw new Error('当前工作区不是Git仓库，请在Git项目中使用此插件');
         }
+    }
+
+    /**
+     * 获取插件配置
+     * @returns 插件配置对象
+     */
+    private getConfiguration() {
+        return vscode.workspace.getConfiguration('gitMergeHelper');
+    }
+
+    /**
+     * 获取主分支名称
+     * @returns Promise<string>
+     */
+    private async getMainBranch(): Promise<string> {
+        const config = this.getConfiguration();
+        const autoDetect = config.get<boolean>('autoDetectMainBranch', true);
+        
+        if (autoDetect) {
+            try {
+                // 尝试自动检测主分支
+                const branches = await this.execGitCommand('git branch -r');
+                if (branches.includes('origin/main')) {
+                    return 'main';
+                } else if (branches.includes('origin/master')) {
+                    return 'master';
+                }
+            } catch (error) {
+                console.warn('自动检测主分支失败，使用配置的分支:', error);
+            }
+        }
+        
+        // 使用配置的主分支
+        return config.get<string>('mainBranch', 'master');
+    }
+
+    /**
+     * 获取目标分支列表
+     * @returns TargetBranchConfig[]
+     */
+    private getTargetBranches(): TargetBranchConfig[] {
+        const config = this.getConfiguration();
+        const defaultBranches: TargetBranchConfig[] = [
+            { name: 'uat', description: '测试环境' },
+            { name: 'pre', description: '预发布环境' }
+        ];
+        
+        return config.get<TargetBranchConfig[]>('targetBranches', defaultBranches);
     }
 
     /**
@@ -154,13 +210,22 @@ export class GitMergeService {
 
             // 获取当前分支名
             const currentBranch = await this.execGitCommand('git branch --show-current');
+            
+            // 获取主分支名称
+            const mainBranch = await this.getMainBranch();
+            this.showProgress(`检测到主分支: ${mainBranch}`);
 
+            // 获取目标分支列表
+            const targetBranches = this.getTargetBranches();
+            
             // 让用户选择目标分支
+            const targetBranchOptions = targetBranches.map(branch => ({
+                label: branch.name,
+                description: branch.description
+            }));
+
             const targetBranch = await vscode.window.showQuickPick(
-                [
-                    { label: 'pre', description: '预发布环境' },
-                    { label: 'uat', description: '测试环境' }
-                ],
+                targetBranchOptions,
                 {
                     placeHolder: '请选择要合并到的目标分支',
                     canPickMany: false
@@ -174,15 +239,15 @@ export class GitMergeService {
             this.showProgress(`开始合并流程，目标分支: ${targetBranch.label}`);
 
             try {
-                // 更新并合并master分支
-                this.showProgress('更新master分支...');
-                await this.execGitCommand('git checkout master');
-                await this.execGitCommand('git pull origin master');
+                // 更新并合并主分支
+                this.showProgress(`更新${mainBranch}分支...`);
+                await this.execGitCommand(`git checkout ${mainBranch}`);
+                await this.execGitCommand(`git pull origin ${mainBranch}`);
 
-                // 合并master到feature分支
-                this.showProgress('合并master到feature分支...');
+                // 合并主分支到feature分支
+                this.showProgress(`合并${mainBranch}到feature分支...`);
                 await this.execGitCommand(`git checkout ${currentBranch}`);
-                await this.execGitCommand('git merge master');
+                await this.execGitCommand(`git merge ${mainBranch}`);
                 await this.execGitCommand(`git push origin ${currentBranch}`);
 
                 // 合并feature分支到目标分支
@@ -252,6 +317,220 @@ export class GitMergeService {
         } catch (error: any) {
             console.error('快速提交过程中发生错误:', error);
             throw error;
+        }
+    }
+
+    /**
+     * 配置管理
+     * @returns Promise<void>
+     */
+    public async manageConfiguration(): Promise<void> {
+        const action = await vscode.window.showQuickPick([
+            { label: '设置主分支', description: '配置主分支为main或master' },
+            { label: '管理目标分支', description: '添加、编辑或删除目标分支' },
+            { label: '切换自动检测', description: '开启/关闭主分支自动检测' },
+            { label: '重置为默认配置', description: '恢复所有配置为默认值' }
+        ], {
+            placeHolder: '选择要执行的配置操作'
+        });
+
+        if (!action) {
+            return;
+        }
+
+        switch (action.label) {
+            case '设置主分支':
+                await this.configureMainBranch();
+                break;
+            case '管理目标分支':
+                await this.manageTargetBranches();
+                break;
+            case '切换自动检测':
+                await this.toggleAutoDetect();
+                break;
+            case '重置为默认配置':
+                await this.resetConfiguration();
+                break;
+        }
+    }
+
+    /**
+     * 配置主分支
+     * @returns Promise<void>
+     */
+    private async configureMainBranch(): Promise<void> {
+        const config = this.getConfiguration();
+        const currentMainBranch = config.get<string>('mainBranch', 'master');
+        
+        const selectedBranch = await vscode.window.showQuickPick([
+            { 
+                label: 'master', 
+                description: currentMainBranch === 'master' ? '(当前设置)' : '',
+                picked: currentMainBranch === 'master'
+            },
+            { 
+                label: 'main', 
+                description: currentMainBranch === 'main' ? '(当前设置)' : '',
+                picked: currentMainBranch === 'main'
+            }
+        ], {
+            placeHolder: '选择主分支名称'
+        });
+
+        if (selectedBranch) {
+            await config.update('mainBranch', selectedBranch.label, vscode.ConfigurationTarget.Workspace);
+            vscode.window.showInformationMessage(`✅ 主分支已设置为: ${selectedBranch.label}`);
+        }
+    }
+
+    /**
+     * 管理目标分支
+     * @returns Promise<void>
+     */
+    private async manageTargetBranches(): Promise<void> {
+        const action = await vscode.window.showQuickPick([
+            { label: '查看当前分支', description: '显示当前配置的目标分支' },
+            { label: '添加新分支', description: '添加一个新的目标分支' },
+            { label: '删除分支', description: '删除一个现有的目标分支' }
+        ], {
+            placeHolder: '选择目标分支管理操作'
+        });
+
+        if (!action) {
+            return;
+        }
+
+        switch (action.label) {
+            case '查看当前分支':
+                await this.showCurrentTargetBranches();
+                break;
+            case '添加新分支':
+                await this.addTargetBranch();
+                break;
+            case '删除分支':
+                await this.removeTargetBranch();
+                break;
+        }
+    }
+
+    /**
+     * 显示当前目标分支
+     * @returns Promise<void>
+     */
+    private async showCurrentTargetBranches(): Promise<void> {
+        const targetBranches = this.getTargetBranches();
+        const branchList = targetBranches.map(branch => `• ${branch.name}: ${branch.description}`).join('\n');
+        
+        vscode.window.showInformationMessage(
+            `当前配置的目标分支:\n\n${branchList}`,
+            { modal: true }
+        );
+    }
+
+    /**
+     * 添加目标分支
+     * @returns Promise<void>
+     */
+    private async addTargetBranch(): Promise<void> {
+        const branchName = await vscode.window.showInputBox({
+            prompt: '请输入新分支名称',
+            placeHolder: '例如: dev, staging, prod'
+        });
+
+        if (!branchName) {
+            return;
+        }
+
+        const branchDescription = await vscode.window.showInputBox({
+            prompt: '请输入分支描述',
+            placeHolder: '例如: 开发环境, 预发布环境'
+        });
+
+        if (!branchDescription) {
+            return;
+        }
+
+        const config = this.getConfiguration();
+        const currentBranches = this.getTargetBranches();
+        
+        // 检查分支是否已存在
+        if (currentBranches.some(branch => branch.name === branchName)) {
+            vscode.window.showWarningMessage(`分支 "${branchName}" 已存在`);
+            return;
+        }
+
+        const newBranches = [...currentBranches, { name: branchName, description: branchDescription }];
+        await config.update('targetBranches', newBranches, vscode.ConfigurationTarget.Workspace);
+        
+        vscode.window.showInformationMessage(`✅ 已添加目标分支: ${branchName} (${branchDescription})`);
+    }
+
+    /**
+     * 删除目标分支
+     * @returns Promise<void>
+     */
+    private async removeTargetBranch(): Promise<void> {
+        const targetBranches = this.getTargetBranches();
+        
+        if (targetBranches.length === 0) {
+            vscode.window.showWarningMessage('没有可删除的目标分支');
+            return;
+        }
+
+        const branchToRemove = await vscode.window.showQuickPick(
+            targetBranches.map(branch => ({
+                label: branch.name,
+                description: branch.description
+            })),
+            {
+                placeHolder: '选择要删除的目标分支'
+            }
+        );
+
+        if (!branchToRemove) {
+            return;
+        }
+
+        const config = this.getConfiguration();
+        const newBranches = targetBranches.filter(branch => branch.name !== branchToRemove.label);
+        await config.update('targetBranches', newBranches, vscode.ConfigurationTarget.Workspace);
+        
+        vscode.window.showInformationMessage(`✅ 已删除目标分支: ${branchToRemove.label}`);
+    }
+
+    /**
+     * 切换自动检测
+     * @returns Promise<void>
+     */
+    private async toggleAutoDetect(): Promise<void> {
+        const config = this.getConfiguration();
+        const currentValue = config.get<boolean>('autoDetectMainBranch', true);
+        const newValue = !currentValue;
+        
+        await config.update('autoDetectMainBranch', newValue, vscode.ConfigurationTarget.Workspace);
+        
+        const status = newValue ? '已开启' : '已关闭';
+        vscode.window.showInformationMessage(`✅ 主分支自动检测${status}`);
+    }
+
+    /**
+     * 重置配置
+     * @returns Promise<void>
+     */
+    private async resetConfiguration(): Promise<void> {
+        const confirm = await vscode.window.showWarningMessage(
+            '确定要重置所有配置为默认值吗？此操作不可撤销。',
+            '确定',
+            '取消'
+        );
+
+        if (confirm === '确定') {
+            const config = this.getConfiguration();
+            await config.update('mainBranch', undefined, vscode.ConfigurationTarget.Workspace);
+            await config.update('targetBranches', undefined, vscode.ConfigurationTarget.Workspace);
+            await config.update('autoDetectMainBranch', undefined, vscode.ConfigurationTarget.Workspace);
+            
+            vscode.window.showInformationMessage('✅ 配置已重置为默认值');
         }
     }
 }

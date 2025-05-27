@@ -77,9 +77,27 @@ function activate(context) {
             console.error('操作失败:', error);
         }
     });
+    // 注册配置管理命令
+    const manageConfigurationCommand = vscode.commands.registerCommand('gitMergeHelper.manageConfiguration', async () => {
+        try {
+            // 检查是否有工作区
+            if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+                vscode.window.showErrorMessage('请先打开一个工作区文件夹');
+                return;
+            }
+            const gitMergeService = new gitMergeService_1.GitMergeService();
+            await gitMergeService.manageConfiguration();
+        }
+        catch (error) {
+            const errorMessage = error.message || '未知错误';
+            vscode.window.showErrorMessage(`配置失败: ${errorMessage}`);
+            console.error('配置失败:', error);
+        }
+    });
     // 将命令添加到上下文订阅中
     context.subscriptions.push(mergeFeatureBranchCommand);
     context.subscriptions.push(quickCommitAndMergeCommand);
+    context.subscriptions.push(manageConfigurationCommand);
     // 只在有工作区时显示激活消息
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
         vscode.window.showInformationMessage('Git合并助手已准备就绪！');

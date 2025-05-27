@@ -2,7 +2,7 @@
   "name": "git-merge-helper",
   "displayName": "Git合并助手",
   "description": "自动化Git分支合并流程的VSCode插件",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "publisher": "Leo-Wei105",
   "repository": {
     "type": "git",
@@ -17,6 +17,54 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Git合并助手",
+      "properties": {
+        "gitMergeHelper.mainBranch": {
+          "type": "string",
+          "default": "master",
+          "enum": ["master", "main"],
+          "description": "主分支名称（用于合并的基础分支）",
+          "enumDescriptions": [
+            "使用master作为主分支",
+            "使用main作为主分支"
+          ]
+        },
+        "gitMergeHelper.targetBranches": {
+          "type": "array",
+          "default": [
+            {
+              "name": "uat",
+              "description": "测试环境"
+            },
+            {
+              "name": "pre",
+              "description": "预发布环境"
+            }
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "分支名称"
+              },
+              "description": {
+                "type": "string",
+                "description": "分支描述"
+              }
+            },
+            "required": ["name", "description"]
+          },
+          "description": "可选的目标分支列表，支持自定义添加更多分支"
+        },
+        "gitMergeHelper.autoDetectMainBranch": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动检测主分支（优先级高于手动设置）"
+        }
+      }
+    },
     "commands": [
       {
         "command": "gitMergeHelper.mergeFeatureBranch",
@@ -26,6 +74,11 @@
       {
         "command": "gitMergeHelper.quickCommitAndMerge",
         "title": "快速提交并合并",
+        "category": "Git合并助手"
+      },
+      {
+        "command": "gitMergeHelper.manageConfiguration",
+        "title": "配置管理",
         "category": "Git合并助手"
       }
     ],
@@ -38,6 +91,10 @@
         {
           "command": "gitMergeHelper.quickCommitAndMerge",
           "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.manageConfiguration",
+          "when": "workspaceFolderCount > 0"
         }
       ],
       "scm/title": [
@@ -48,6 +105,11 @@
         },
         {
           "command": "gitMergeHelper.quickCommitAndMerge",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.manageConfiguration",
           "group": "inline",
           "when": "scmProvider == git && gitOpenRepositoryCount > 0"
         }
@@ -62,6 +124,11 @@
           "command": "gitMergeHelper.quickCommitAndMerge",
           "group": "7_modification",
           "when": "explorerResourceIsFolder && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.manageConfiguration",
+          "group": "7_modification",
+          "when": "explorerResourceIsFolder && gitOpenRepositoryCount > 0"
         }
       ],
       "editor/context": [
@@ -72,6 +139,11 @@
         },
         {
           "command": "gitMergeHelper.quickCommitAndMerge",
+          "group": "1_modification",
+          "when": "gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.manageConfiguration",
           "group": "1_modification",
           "when": "gitOpenRepositoryCount > 0"
         }
