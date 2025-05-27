@@ -2,8 +2,12 @@
   "name": "git-merge-helper",
   "displayName": "Git合并助手",
   "description": "自动化Git分支合并流程的VSCode插件",
-  "version": "1.0.0",
-  "publisher": "your-publisher-name",
+  "version": "1.0.2",
+  "publisher": "Leo-Wei105",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Leo-Wei105/git-merge-helper.git"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -39,8 +43,37 @@
       "scm/title": [
         {
           "command": "gitMergeHelper.mergeFeatureBranch",
-          "group": "navigation",
-          "when": "scmProvider == git"
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.quickCommitAndMerge",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "gitMergeHelper.mergeFeatureBranch",
+          "group": "7_modification",
+          "when": "explorerResourceIsFolder && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.quickCommitAndMerge",
+          "group": "7_modification",
+          "when": "explorerResourceIsFolder && gitOpenRepositoryCount > 0"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "gitMergeHelper.mergeFeatureBranch",
+          "group": "1_modification",
+          "when": "gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.quickCommitAndMerge",
+          "group": "1_modification",
+          "when": "gitOpenRepositoryCount > 0"
         }
       ]
     }
@@ -48,7 +81,16 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "version:patch": "node scripts/version-bump.js patch",
+    "version:minor": "node scripts/version-bump.js minor",
+    "version:major": "node scripts/version-bump.js major",
+    "package": "node scripts/package.js",
+    "package:patch": "node scripts/package.js patch",
+    "package:minor": "node scripts/package.js minor",
+    "package:major": "node scripts/package.js major",
+    "build": "npm run compile && npx vsce package --no-update-package-json",
+    "release": "npm run package && echo '✅ 发布包已生成，请手动安装测试'"
   },
   "devDependencies": {
     "@types/node": "^20.x",

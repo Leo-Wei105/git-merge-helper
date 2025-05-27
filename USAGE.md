@@ -123,8 +123,33 @@ A: 确保没有未保存的文件，检查分支是否存在
 
 ## 📦 如何打包发布：
 
+### 准备工作
+确保已安装所有依赖：
+```bash
+npm install
+```
+
 ### 打包为.vsix文件
+```bash
 npx @vscode/vsce package
+```
+
+如果遇到"'vsce' 不是内部或外部命令"错误，请尝试：
+```bash
+# 方法1：使用npx确保安装
+npx --yes @vscode/vsce package
+
+# 方法2：全局安装vsce
+npm install -g @vscode/vsce
+vsce package
+```
 
 ### 安装到VSCode
+```bash
 code --install-extension git-merge-helper-1.0.0.vsix
+```
+
+### 常见打包问题
+- **缺少repository字段**：已在package.json中添加
+- **缺少LICENSE文件**：已创建MIT许可证
+- **包含不必要文件**：已创建.vscodeignore文件优化
