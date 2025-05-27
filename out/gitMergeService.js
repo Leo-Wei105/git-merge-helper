@@ -81,6 +81,9 @@ class GitMergeService {
                 else if (branches.includes('origin/master')) {
                     return 'master';
                 }
+                else if (branches.includes('origin/release')) {
+                    return 'release';
+                }
             }
             catch (error) {
                 console.warn('自动检测主分支失败，使用配置的分支:', error);
