@@ -350,6 +350,11 @@ class GitMergeService {
                 label: 'main',
                 description: currentMainBranch === 'main' ? '(当前设置)' : '',
                 picked: currentMainBranch === 'main'
+            },
+            {
+                label: 'release',
+                description: currentMainBranch === 'release' ? '(当前设置)' : '',
+                picked: currentMainBranch === 'release'
             }
         ], {
             placeHolder: '选择主分支名称'
