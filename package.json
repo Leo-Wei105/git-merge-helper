@@ -1,0 +1,67 @@
+{
+  "name": "git-merge-helper",
+  "displayName": "Git合并助手",
+  "description": "自动化Git分支合并流程的VSCode插件",
+  "version": "1.0.0",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gitMergeHelper.mergeFeatureBranch",
+        "title": "合并Feature分支",
+        "category": "Git合并助手"
+      },
+      {
+        "command": "gitMergeHelper.quickCommitAndMerge",
+        "title": "快速提交并合并",
+        "category": "Git合并助手"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "gitMergeHelper.mergeFeatureBranch",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "gitMergeHelper.quickCommitAndMerge",
+          "when": "workspaceFolderCount > 0"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "gitMergeHelper.mergeFeatureBranch",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.74.0",
+    "@vscode/vsce": "^2.32.0",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "git",
+    "merge",
+    "branch",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT"
+}
