@@ -2,12 +2,13 @@
   "name": "git-merge-helper",
   "displayName": "Git合并助手",
   "description": "自动化Git分支合并流程的VSCode插件",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publisher": "Leo-Wei105",
   "repository": {
     "type": "git",
     "url": "https://github.com/Leo-Wei105/git-merge-helper.git"
   },
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.74.0"
   },
