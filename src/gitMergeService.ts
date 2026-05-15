@@ -7,6 +7,7 @@ import { GitOperations } from "./gitOperations";
 import { MergeWorkflow } from "./mergeWorkflow";
 import { MergeTargetConfigManager } from "./mergeTargetConfigManager";
 import { AppError, isUserCancelledError, toAppError } from "./errors";
+import { openGitWorkflowHelperSettings } from "./openExtensionSettings";
 
 /**
  * Git合并服务类
@@ -105,10 +106,7 @@ export class GitMergeService {
    * 配置管理 - 直接跳转到插件设置页
    */
   public async manageConfiguration(): Promise<void> {
-    await vscode.commands.executeCommand(
-      'workbench.action.openWorkspaceSettings',
-      '@ext:Leo-Wei105.git-workflow-helper'
-    );
+    await openGitWorkflowHelperSettings();
   }
 
 }
