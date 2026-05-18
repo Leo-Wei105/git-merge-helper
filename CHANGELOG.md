@@ -2,8 +2,13 @@
 
 本项目的所有重要变更均记录在此文件（格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)）。
 
-## [0.2.0] - 2026-05-18
+## [0.2.1] - 2026-05-18
 
+### 修复
+
+- **配置管理**：修复在大型项目工作区中点击“配置管理”打开设置时，因使用 `@ext:` 筛选器导致 VS Code 设置界面严重卡顿或卡死的问题。改为直接通过配置前缀 `gitWorkflowHelper` 搜索，大幅提升打开速度并避免性能问题。
+
+## [0.2.0] - 2026-05-18
 ### 新增
 
 - **格式化提交**：Conventional Commits 风格内置模板（feat、fix、docs、refactor 等），支持自定义模板（`commitTemplates`）与默认模板 id（`defaultCommitTemplateId`）；命令「格式化提交」「复制格式化提交信息」。
