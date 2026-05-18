@@ -200,6 +200,11 @@
     },
     "commands": [
       {
+        "command": "gitWorkflowHelper.pullAllBranches",
+        "title": "一键拉取所有本地分支",
+        "category": "Git工作流助手"
+      },
+      {
         "command": "gitWorkflowHelper.createBranch",
         "title": "创建功能分支",
         "category": "Git工作流助手"
@@ -273,6 +278,10 @@
     "menus": {
       "commandPalette": [
         {
+          "command": "gitWorkflowHelper.pullAllBranches",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
           "command": "gitWorkflowHelper.createBranch",
           "when": "workspaceFolderCount > 0"
         },
@@ -314,6 +323,11 @@
         }
       ],
       "scm/title": [
+        {
+          "command": "gitWorkflowHelper.pullAllBranches",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
         {
           "command": "gitWorkflowHelper.createBranch",
           "group": "inline",
@@ -415,6 +429,10 @@
         {
           "command": "gitWorkflowHelper.mergeFeatureBranch",
           "group": "2_merge@2"
+        },
+        {
+          "command": "gitWorkflowHelper.pullAllBranches",
+          "group": "2_pull@0"
         },
         {
           "command": "gitWorkflowHelper.batchCherryPick",

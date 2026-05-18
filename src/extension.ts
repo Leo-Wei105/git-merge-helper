@@ -8,6 +8,7 @@ import { FormattedCommitService } from './formattedCommitService';
 import { GitConflictHandler } from './gitConflictHandler';
 import { GitMergeService } from './gitMergeService';
 import { GitPushService } from './gitPushService';
+import { GitPullService } from './gitPullService';
 import { MergeRevertService } from './mergeRevertService';
 import { openGitWorkflowHelperSettings } from './openExtensionSettings';
 
@@ -63,6 +64,20 @@ function handleCommandError(action: string, error: unknown): void {
  */
 export function activate(context: vscode.ExtensionContext) {
     console.log('Git工作流助手插件已激活');
+
+    // 注册一键拉取所有分支命令
+    const pullAllBranchesCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.pullAllBranches',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const gitPullService = new GitPullService(workspaceRoot);
+                await gitPullService.pullAllBranches();
+            } catch (error: any) {
+                handleCommandError('一键拉取', error);
+            }
+        }
+    );
 
     // 注册创建分支命令
     const createBranchCommand = vscode.commands.registerCommand(
@@ -203,6 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        pullAllBranchesCommand,
         createBranchCommand,
         mergeFeatureBranchCommand,
         showBranchBaseCommand,

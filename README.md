@@ -52,6 +52,7 @@
 
 | 命令 | 说明 |
 |------|------|
+| 一键拉取所有本地分支 | 自动 fetch 并使用快进（fast-forward）安全更新所有本地追踪分支，跳过存在分叉的分支 |
 | 回滚合入当前分支的合并 | 定位当前分支最近一次 merge（first-parent），支持 reset 或 revert |
 | 查看当前分支基分支 | 显示创建时记录的基分支或 reflog 推断结果 |
 | 强制推送（force-with-lease） | `git push --force-with-lease` |
@@ -143,6 +144,7 @@
 | `gitConflictHandler.ts` | 统一冲突处理 |
 | `formattedCommitService.ts` / `commitTemplateManager.ts` | 格式化提交 |
 | `batchCherryPickService.ts` | 批量 cherry-pick |
+| `gitPullService.ts` | 一键拉取所有本地分支 |
 | `mergeRevertService.ts` / `gitPushService.ts` / `branchBaseService.ts` | 回滚、强推、基分支 |
 | `errors.ts` | 统一错误与用户取消 |
 
@@ -188,7 +190,7 @@ npm run publish      # 发布到 VS Code Marketplace（需 vsce 登录）
 
 ## 版本与更新日志
 
-- **当前发布版本**：`0.2.0`（与 `package.json` 中 `version` 一致）
+- **当前发布版本**：`0.3.0`（与 `package.json` 中 `version` 一致）
 - **详细变更**：见 [`CHANGELOG.md`](./CHANGELOG.md)
 
 ---
