@@ -23,6 +23,19 @@ export type RevertMergeResult =
   | { status: "staged" }
   | { status: "conflicts"; conflictFiles: string[] };
 
+/** 可 cherry-pick 的提交（在源分支上、尚未包含于当前分支） */
+export interface CherryPickCommitInfo {
+  hash: string;
+  shortHash: string;
+  subject: string;
+  author: string;
+  date: string;
+  /** 是否为 merge 提交（父提交数 > 1） */
+  isMergeCommit: boolean;
+}
+
+export type CherryPickOutcome = "success" | "conflicts" | "empty";
+
 /** 当前分支历史上最近的一次 merge 提交信息 */
 export interface LatestMergeCommit {
   hash: string;
@@ -405,6 +418,100 @@ export class GitOperations {
 
   async continueCherryPick(): Promise<void> {
     await this.execGitArgs(["cherry-pick", "--continue"]);
+  }
+
+  async cherryPickSkip(): Promise<void> {
+    await this.execGitArgs(["cherry-pick", "--skip"]);
+  }
+
+  /**
+   * 列出源分支上尚未包含于当前分支（HEAD）的提交，按时间从旧到新
+   */
+  async getCherryPickCandidates(
+    sourceBranch: string,
+    maxCount: number = 50
+  ): Promise<CherryPickCommitInfo[]> {
+    const limit = Math.min(200, Math.max(1, Math.floor(maxCount)));
+    let output: string;
+    try {
+      output = await this.execGitArgs([
+        "log",
+        `HEAD..${sourceBranch}`,
+        `--max-count=${limit}`,
+        "--reverse",
+        "--format=%H%x1e%s%x1e%an%x1e%ci%x1e%P",
+      ]);
+    } catch {
+      return [];
+    }
+
+    if (!output.trim()) {
+      return [];
+    }
+
+    return output
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => {
+        const [hash, subject, author, date, parents] = line.split("\x1e");
+        const parentHashes = (parents || "").trim().split(/\s+/).filter(Boolean);
+        return {
+          hash,
+          shortHash: hash.slice(0, 7),
+          subject: subject || "",
+          author: author || "",
+          date: date || "",
+          isMergeCommit: parentHashes.length > 1,
+        };
+      });
+  }
+
+  /**
+   * 将单个提交 cherry-pick 到当前分支
+   */
+  async cherryPickCommit(
+    commitHash: string,
+    recordOrigin: boolean = true
+  ): Promise<CherryPickOutcome> {
+    const args = ["cherry-pick"];
+    if (recordOrigin) {
+      args.push("-x");
+    }
+    args.push(commitHash);
+
+    try {
+      await this.execGitArgs(args);
+      return "success";
+    } catch (error: unknown) {
+      const message =
+        error instanceof AppError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      const lower = message.toLowerCase();
+
+      if (
+        lower.includes("empty") ||
+        lower.includes("为空") ||
+        lower.includes("now empty")
+      ) {
+        return "empty";
+      }
+
+      if (
+        (await this.checkMergeConflicts()) ||
+        (await this.isCherryPickInProgress())
+      ) {
+        return "conflicts";
+      }
+
+      throw AppError.gitFailed(
+        `Cherry-pick 失败: ${message}`,
+        "cherryPickCommit",
+        error
+      );
+    }
   }
 
   async continueRebase(): Promise<void> {

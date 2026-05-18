@@ -112,6 +112,37 @@
           "default": false,
           "description": "使用 revert 回滚时，是否始终跳过 pre-commit 等 Git 钩子（--no-verify）"
         },
+        "gitWorkflowHelper.maxCherryPickCommitsToList": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "maximum": 200,
+          "description": "批量优选时列表展示的最多提交数量（10-200）"
+        },
+        "gitWorkflowHelper.cherryPickRecordOrigin": {
+          "type": "boolean",
+          "default": true,
+          "description": "批量 cherry-pick 时使用 -x 在提交信息中记录来源"
+        },
+        "gitWorkflowHelper.cherryPickFilterPriority": {
+          "type": "array",
+          "default": [
+            "merge",
+            "author",
+            "time",
+            "keyword"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "merge",
+              "author",
+              "time",
+              "keyword"
+            ]
+          },
+          "description": "高级：merge/author/time 过滤的应用顺序。关键字在提交列表顶栏搜索框输入，无需配置"
+        },
         "gitWorkflowHelper.mergeRollbackStrategy": {
           "type": "string",
           "default": "reset",
@@ -158,6 +189,11 @@
       {
         "command": "gitWorkflowHelper.resolveConflicts",
         "title": "处理 Git 冲突",
+        "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.batchCherryPick",
+        "title": "批量 Cherry-pick（优选）",
         "category": "Git工作流助手"
       },
       {
@@ -213,6 +249,10 @@
           "when": "workspaceFolderCount > 0"
         },
         {
+          "command": "gitWorkflowHelper.batchCherryPick",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
           "command": "gitWorkflowHelper.manageConfiguration",
           "when": "workspaceFolderCount > 0"
         }
@@ -245,6 +285,11 @@
         },
         {
           "command": "gitWorkflowHelper.resolveConflicts",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.batchCherryPick",
           "group": "inline",
           "when": "scmProvider == git && gitOpenRepositoryCount > 0"
         },
@@ -301,6 +346,10 @@
         {
           "command": "gitWorkflowHelper.mergeFeatureBranch",
           "group": "2_merge@2"
+        },
+        {
+          "command": "gitWorkflowHelper.batchCherryPick",
+          "group": "2_cherry@2"
         },
         {
           "command": "gitWorkflowHelper.rollbackLastMerge",

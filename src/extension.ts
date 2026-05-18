@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { BatchCherryPickService } from './batchCherryPickService';
 import { BranchBaseService } from './branchBaseService';
 import { BranchConfigManager } from './branchConfigManager';
 import { BranchCreator } from './branchCreator';
@@ -133,6 +134,20 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // 注册批量 Cherry-pick 命令
+    const batchCherryPickCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.batchCherryPick',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const service = new BatchCherryPickService(workspaceRoot);
+                await service.runBatchCherryPick();
+            } catch (error: any) {
+                handleCommandError('批量优选', error);
+            }
+        }
+    );
+
     // 注册 force-with-lease 推送命令
     const pushForceWithLeaseCommand = vscode.commands.registerCommand(
         'gitWorkflowHelper.pushForceWithLease',
@@ -165,6 +180,7 @@ export function activate(context: vscode.ExtensionContext) {
         showBranchBaseCommand,
         rollbackLastMergeCommand,
         resolveConflictsCommand,
+        batchCherryPickCommand,
         pushForceWithLeaseCommand,
         manageConfigurationCommand
     );
