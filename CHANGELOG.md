@@ -2,6 +2,30 @@
 
 本项目的所有重要变更均记录在此文件（格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)）。
 
+## [0.2.0] - 2026-05-18
+
+### 新增
+
+- **格式化提交**：Conventional Commits 风格内置模板（feat、fix、docs、refactor 等），支持自定义模板（`commitTemplates`）与默认模板 id（`defaultCommitTemplateId`）；命令「格式化提交」「复制格式化提交信息」。
+- **批量 Cherry-pick（优选）**：从源分支多选提交并依次 cherry-pick，支持推荐/自定义/全部三种入口与列表内搜索。
+- **处理 Git 冲突**：统一识别 merge / revert / cherry-pick / rebase 冲突，提供打开合并编辑器、取消操作、已解决继续等引导。
+- **回滚合入当前分支的合并**：按 first-parent 定位最近一次 merge，支持 `reset` / `revert` / 每次询问（`mergeRollbackStrategy`）。
+- **查看当前分支基分支**：创建分支时记录基分支，并支持 reflog 推断。
+- **强制推送（force-with-lease）**：安全强推当前分支到远程。
+- **右键与子菜单**：资源管理器、编辑器、SCM 资源上下文中的「Git工作流助手」子菜单；SCM 标题栏快捷命令。
+
+### 变更
+
+- 合并流程中遇到未提交更改时，改用格式化提交模板，不再写死 `feat:` 前缀。
+- Revert 回滚 merge 时支持冲突预检与可选跳过钩子（`skipHooksOnRevert`）；修正 `revert --continue` 与 `--no-verify` 的用法。
+- 命令归类为「Git工作流助手」类别，标题与对话框文案精简。
+
+### 配置
+
+- `gitWorkflowHelper.commitTemplates`、`defaultCommitTemplateId`
+- `gitWorkflowHelper.mergeRollbackStrategy`、`skipHooksOnRevert`
+- `gitWorkflowHelper.maxCherryPickCommitsToList`、`cherryPickRecordOrigin`、`cherryPickFilterPriority`
+
 ## [0.1.2] - 2026-05-14
 
 ### 变更
