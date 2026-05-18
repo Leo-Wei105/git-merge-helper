@@ -138,6 +138,25 @@ export class GitOperations {
   }
 
   /**
+   * 检查是否存在未暂存的工作区更改
+   */
+  async checkUnstagedChanges(): Promise<boolean> {
+    const unstaged = await this.execGitArgs(["diff", "--name-only"]);
+    return unstaged.length > 0;
+  }
+
+  /**
+   * 获取 Git 配置的用户名
+   */
+  async getGitUserName(): Promise<string> {
+    try {
+      return (await this.execGitArgs(["config", "user.name"])).trim();
+    } catch {
+      return "";
+    }
+  }
+
+  /**
    * 检查是否存在合并冲突
    */
   async checkMergeConflicts(): Promise<boolean> {

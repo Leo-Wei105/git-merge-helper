@@ -4,6 +4,7 @@ import { BranchBaseService } from './branchBaseService';
 import { BranchConfigManager } from './branchConfigManager';
 import { BranchCreator } from './branchCreator';
 import { AppError, isUserCancelledError, toAppError } from './errors';
+import { FormattedCommitService } from './formattedCommitService';
 import { GitConflictHandler } from './gitConflictHandler';
 import { GitMergeService } from './gitMergeService';
 import { GitPushService } from './gitPushService';
@@ -148,6 +149,33 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // 注册格式化提交命令
+    const formattedCommitCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.formattedCommit',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const service = new FormattedCommitService(workspaceRoot);
+                await service.commitWithTemplate();
+            } catch (error: any) {
+                handleCommandError('格式化提交', error);
+            }
+        }
+    );
+
+    const copyFormattedCommitMessageCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.copyFormattedCommitMessage',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const service = new FormattedCommitService(workspaceRoot);
+                await service.copyFormattedMessageToClipboard();
+            } catch (error: any) {
+                handleCommandError('复制提交信息', error);
+            }
+        }
+    );
+
     // 注册 force-with-lease 推送命令
     const pushForceWithLeaseCommand = vscode.commands.registerCommand(
         'gitWorkflowHelper.pushForceWithLease',
@@ -181,6 +209,8 @@ export function activate(context: vscode.ExtensionContext) {
         rollbackLastMergeCommand,
         resolveConflictsCommand,
         batchCherryPickCommand,
+        formattedCommitCommand,
+        copyFormattedCommitMessageCommand,
         pushForceWithLeaseCommand,
         manageConfigurationCommand
     );

@@ -157,6 +157,44 @@
             "每次回滚前询问选择 reset 或 revert"
           ],
           "description": "回滚「合入当前分支的合并」时采用的方式（默认 reset，非 revert）"
+        },
+        "gitWorkflowHelper.commitTemplates": {
+          "type": "array",
+          "default": [],
+          "description": "自定义提交信息模板。可为字符串（如 \"ci: {description}\"）或对象（id、name、description、template）",
+          "markdownDescription": "自定义提交信息模板，与内置 Conventional Commits 模板一起出现在「格式化提交」中。\n\n- 字符串：`\"ci: {description}\"`\n- 对象：`{ \"id\": \"ci\", \"name\": \"CI\", \"template\": \"ci: {description}\" }`\n\n占位符：`{description}`、`{scope}`、`{ticket}`、`{username}`",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "template": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "template"
+                ]
+              }
+            ]
+          }
+        },
+        "gitWorkflowHelper.defaultCommitTemplateId": {
+          "type": "string",
+          "default": "feat",
+          "description": "格式化提交时默认高亮的模板 id（内置如 feat、fix；或自定义模板的 id）"
         }
       }
     },
@@ -194,6 +232,16 @@
       {
         "command": "gitWorkflowHelper.batchCherryPick",
         "title": "批量 Cherry-pick（优选）",
+        "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.formattedCommit",
+        "title": "格式化提交",
+        "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.copyFormattedCommitMessage",
+        "title": "复制格式化提交信息",
         "category": "Git工作流助手"
       },
       {
@@ -253,6 +301,14 @@
           "when": "workspaceFolderCount > 0"
         },
         {
+          "command": "gitWorkflowHelper.formattedCommit",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.copyFormattedCommitMessage",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
           "command": "gitWorkflowHelper.manageConfiguration",
           "when": "workspaceFolderCount > 0"
         }
@@ -290,6 +346,11 @@
         },
         {
           "command": "gitWorkflowHelper.batchCherryPick",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.formattedCommit",
           "group": "inline",
           "when": "scmProvider == git && gitOpenRepositoryCount > 0"
         },
@@ -335,6 +396,14 @@
         }
       ],
       "gitWorkflowHelper.context": [
+        {
+          "command": "gitWorkflowHelper.formattedCommit",
+          "group": "0_commit@0"
+        },
+        {
+          "command": "gitWorkflowHelper.copyFormattedCommitMessage",
+          "group": "0_commit@1"
+        },
         {
           "command": "gitWorkflowHelper.resolveConflicts",
           "group": "0_conflict@0"

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { BranchConfigManager } from "./branchConfigManager";
 import { BranchManager, MergeConflictResolution } from "./branchManager";
+import { CommitTemplateManager } from "./commitTemplateManager";
 import { AppError } from "./errors";
 import { GitConflictHandler } from "./gitConflictHandler";
 import { GitOperations } from "./gitOperations";
@@ -120,25 +121,13 @@ export class MergeWorkflow {
       await this.gitOps.stageAllChanges();
     }
 
-    const commitMessage = await vscode.window.showInputBox({
-      prompt: "请输入commit内容",
-      placeHolder: "输入提交信息...",
-      validateInput: (value) => {
-        if (!value || value.trim().length === 0) {
-          return "提交信息不能为空";
-        }
-        if (value.length > 100) {
-          return "提交信息长度不能超过100个字符";
-        }
-        return null;
-      },
-    });
-
+    const templateManager = new CommitTemplateManager(this.gitOps);
+    const commitMessage = await templateManager.promptFormattedCommitMessage();
     if (!commitMessage) {
       throw AppError.userCancelled("未输入提交信息，操作已取消");
     }
 
-    await this.gitOps.commitStagedChanges(`feat: ${commitMessage}`);
+    await this.gitOps.commitStagedChanges(commitMessage);
     await this.gitOps.pushBranch(currentBranch);
   }
 
