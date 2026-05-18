@@ -1,15 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import {
-    AppError,
-    isGitHookFailure,
-    isUserCancelledError,
-    toAppError,
-} from "./errors";
+import { AppError, isUserCancelledError, toAppError } from "./errors";
+import { ConflictResolution, GitConflictHandler } from "./gitConflictHandler";
 import { GitOperations, LatestMergeCommit } from "./gitOperations";
 
-type RevertConflictResolution = "resolved" | "aborted" | "pending";
 export type MergeRollbackStrategy = "reset" | "revert";
 
 /**
@@ -35,12 +30,6 @@ export class MergeRevertService {
     return vscode.workspace
       .getConfiguration("gitWorkflowHelper")
       .get<"reset" | "revert" | "ask">("mergeRollbackStrategy", "reset");
-  }
-
-  private shouldAlwaysSkipHooksOnRevert(): boolean {
-    return vscode.workspace
-      .getConfiguration("gitWorkflowHelper")
-      .get<boolean>("skipHooksOnRevert", false);
   }
 
   private canUseReset(commitsAfterMerge: number): boolean {
@@ -112,156 +101,18 @@ export class MergeRevertService {
     return picked.value;
   }
 
+  private getConflictHandler(): GitConflictHandler {
+    return new GitConflictHandler(this.gitOps.getWorkspaceRoot());
+  }
+
   private async finishRevertCommit(): Promise<void> {
-    if (!(await this.gitOps.isRevertInProgress())) {
-      return;
-    }
-
-    if (this.shouldAlwaysSkipHooksOnRevert()) {
-      await this.gitOps.continueRevert({ skipHooks: true });
-      return;
-    }
-
-    try {
-      await this.gitOps.continueRevert();
-    } catch (error: unknown) {
-      if (!isGitHookFailure(error)) {
-        throw error;
-      }
-
-      const retry = await vscode.window.showWarningMessage(
-        "回滚提交被 pre-commit / husky / lint-staged 等钩子拦截。\n是否跳过钩子完成 revert 提交？",
-        { modal: true },
-        "跳过钩子完成"
-      );
-
-      if (retry !== "跳过钩子完成") {
-        throw AppError.userCancelled(
-          "请修复钩子后手动 git revert --continue，或 git revert --abort"
-        );
-      }
-
-      await this.gitOps.continueRevert({ skipHooks: true });
-    }
-  }
-
-  private getMaxConflictFilesToOpen(): number {
-    const config = vscode.workspace.getConfiguration("gitWorkflowHelper");
-    const configured = config.get<number>("maxConflictFilesToOpen", 5);
-    if (!Number.isFinite(configured)) {
-      return 5;
-    }
-    return Math.min(20, Math.max(1, Math.floor(configured)));
-  }
-
-  private async openConflictFiles(conflictFiles: string[]): Promise<void> {
-    if (conflictFiles.length === 0) {
-      return;
-    }
-
-    const openAction = await vscode.window.showQuickPick(
-      [
-        { label: "选择文件打开", value: "pick-one" },
-        {
-          label: `批量打开前 ${this.getMaxConflictFilesToOpen()} 个`,
-          value: "open-top-n",
-        },
-      ],
-      { placeHolder: "请选择冲突文件打开方式" }
-    );
-
-    if (!openAction) {
-      return;
-    }
-
-    if (openAction.value === "open-top-n") {
-      const filesToOpen = conflictFiles.slice(0, this.getMaxConflictFilesToOpen());
-      for (const relativePath of filesToOpen) {
-        const filePath = path.join(this.gitOps.getWorkspaceRoot(), relativePath);
-        const document = await vscode.workspace.openTextDocument(filePath);
-        await vscode.window.showTextDocument(document, { preview: false });
-      }
-      return;
-    }
-
-    const selected = await vscode.window.showQuickPick(
-      conflictFiles.map((file) => ({ label: file, value: file })),
-      { placeHolder: "请选择要打开的冲突文件" }
-    );
-
-    if (!selected) {
-      return;
-    }
-
-    const filePath = path.join(this.gitOps.getWorkspaceRoot(), selected.value);
-    const document = await vscode.workspace.openTextDocument(filePath);
-    await vscode.window.showTextDocument(document);
+    await this.getConflictHandler().completeRevertOperation();
   }
 
   private async handleRevertConflicts(
     conflictFiles: string[]
-  ): Promise<RevertConflictResolution> {
-    const action = await vscode.window.showWarningMessage(
-      `revert 回滚产生 ${conflictFiles.length} 个文件冲突：\n${conflictFiles.join("\n")}`,
-      { modal: true },
-      "打开冲突文件",
-      "中止回滚",
-      "手动解决后继续"
-    );
-
-    switch (action) {
-      case "打开冲突文件":
-        await this.openConflictFiles(conflictFiles);
-        return "pending";
-      case "中止回滚":
-        await this.gitOps.abortRevert();
-        return "aborted";
-      case "手动解决后继续":
-        return await this.waitForRevertConflictResolution();
-      default:
-        return "pending";
-    }
-  }
-
-  private async waitForRevertConflictResolution(): Promise<RevertConflictResolution> {
-    while (true) {
-      const hasConflicts = await this.gitOps.checkMergeConflicts();
-      if (!hasConflicts) {
-        const hasChanges = await this.gitOps.checkUncommittedChanges();
-        if (hasChanges) {
-          const shouldContinue = await vscode.window.showInformationMessage(
-            "冲突已解决，是否完成 revert 提交？",
-            { modal: true },
-            "完成提交"
-          );
-          if (shouldContinue === "完成提交") {
-            await this.gitOps.stageAllChanges();
-            await this.finishRevertCommit();
-            return "resolved";
-          }
-          await this.gitOps.abortRevert();
-          return "aborted";
-        }
-        try {
-          await this.finishRevertCommit();
-          return "resolved";
-        } catch (error) {
-          throw toAppError(error, "完成 revert 失败");
-        }
-      }
-
-      const continueWaiting = await vscode.window.showInformationMessage(
-        "仍有未解决的冲突，请继续处理...",
-        { modal: true },
-        "重新检查",
-        "中止回滚"
-      );
-
-      if (continueWaiting === "中止回滚") {
-        await this.gitOps.abortRevert();
-        return "aborted";
-      }
-    }
+  ): Promise<ConflictResolution> {
+    return this.getConflictHandler().runConflictWizard("revert", conflictFiles);
   }
 
   private async handleStuckRevertState(): Promise<boolean> {

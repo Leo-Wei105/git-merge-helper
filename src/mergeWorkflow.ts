@@ -1,8 +1,8 @@
-import * as path from "path";
 import * as vscode from "vscode";
 import { BranchConfigManager } from "./branchConfigManager";
 import { BranchManager, MergeConflictResolution } from "./branchManager";
 import { AppError } from "./errors";
+import { GitConflictHandler } from "./gitConflictHandler";
 import { GitOperations } from "./gitOperations";
 import { MergeTargetConfigManager } from "./mergeTargetConfigManager";
 
@@ -27,63 +27,8 @@ export class MergeWorkflow {
     this.mergeTargetConfigManager = mergeTargetConfigManager;
   }
 
-  /**
-   * 读取冲突文件批量打开数量配置，并做安全兜底
-   */
-  private getMaxConflictFilesToOpen(): number {
-    const config = vscode.workspace.getConfiguration("gitWorkflowHelper");
-    const configured = config.get<number>("maxConflictFilesToOpen", 5);
-    if (!Number.isFinite(configured)) {
-      return 5;
-    }
-    return Math.min(20, Math.max(1, Math.floor(configured)));
-  }
-
-  /**
-   * 打开冲突文件（支持单个选择或批量打开前N个）
-   */
-  private async openConflictFiles(conflictFiles: string[]): Promise<void> {
-    if (conflictFiles.length === 0) {
-      return;
-    }
-
-    const openAction = await vscode.window.showQuickPick(
-      [
-        { label: "选择文件打开", value: "pick-one" },
-        { label: `批量打开前 ${this.getMaxConflictFilesToOpen()} 个`, value: "open-top-n" },
-      ],
-      { placeHolder: "请选择冲突文件打开方式" }
-    );
-
-    if (!openAction) {
-      return;
-    }
-
-    if (openAction.value === "open-top-n") {
-      const filesToOpen = conflictFiles.slice(0, this.getMaxConflictFilesToOpen());
-      for (const relativePath of filesToOpen) {
-        const filePath = path.join(this.gitOps.getWorkspaceRoot(), relativePath);
-        const document = await vscode.workspace.openTextDocument(filePath);
-        await vscode.window.showTextDocument(document, { preview: false });
-      }
-      return;
-    }
-
-    const selected = await vscode.window.showQuickPick(
-      conflictFiles.map((file) => ({
-        label: file,
-        value: file,
-      })),
-      { placeHolder: "请选择要打开的冲突文件" }
-    );
-
-    if (!selected) {
-      return;
-    }
-
-    const filePath = path.join(this.gitOps.getWorkspaceRoot(), selected.value);
-    const document = await vscode.workspace.openTextDocument(filePath);
-    await vscode.window.showTextDocument(document);
+  private getConflictHandler(): GitConflictHandler {
+    return new GitConflictHandler(this.gitOps.getWorkspaceRoot());
   }
 
   /**
@@ -92,71 +37,7 @@ export class MergeWorkflow {
   private async handleMergeConflicts(
     conflictFiles: string[]
   ): Promise<MergeConflictResolution> {
-    if (conflictFiles.length === 0) {
-      return "resolved";
-    }
-
-    const action = await vscode.window.showWarningMessage(
-      `检测到 ${conflictFiles.length} 个文件存在合并冲突：\n${conflictFiles.join("\n")}`,
-      { modal: true },
-      "打开冲突文件",
-      "中止合并",
-      "手动解决后继续"
-    );
-
-    switch (action) {
-      case "打开冲突文件":
-        await this.openConflictFiles(conflictFiles);
-        return "pending";
-
-      case "中止合并":
-        await this.gitOps.abortMerge();
-        return "aborted";
-
-      case "手动解决后继续":
-        return await this.waitForConflictResolution();
-
-      default:
-        return "pending";
-    }
-  }
-
-  /**
-   * 等待冲突解决
-   */
-  private async waitForConflictResolution(): Promise<MergeConflictResolution> {
-    while (true) {
-      const hasConflicts = await this.gitOps.checkMergeConflicts();
-      if (!hasConflicts) {
-        const hasUnstagedChanges = await this.gitOps.checkUncommittedChanges();
-        if (hasUnstagedChanges) {
-          const shouldCommit = await vscode.window.showInformationMessage(
-            "冲突已解决，是否提交合并结果？",
-            { modal: true },
-            "提交"
-          );
-
-          if (shouldCommit === "提交") {
-            await this.gitOps.commitStagedChanges("feat: 合并冲突解决");
-            return "resolved";
-          }
-          return "aborted";
-        }
-        return "resolved";
-      }
-
-      const continueWaiting = await vscode.window.showInformationMessage(
-        "仍有未解决的冲突，请继续解决...",
-        { modal: true },
-        "重新检查",
-        "中止合并"
-      );
-
-      if (continueWaiting === "中止合并") {
-        await this.gitOps.abortMerge();
-        return "aborted";
-      }
-    }
+    return this.getConflictHandler().runConflictWizard("merge", conflictFiles);
   }
 
   /**

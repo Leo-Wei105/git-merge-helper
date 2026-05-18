@@ -156,6 +156,11 @@
         "category": "Git工作流助手"
       },
       {
+        "command": "gitWorkflowHelper.resolveConflicts",
+        "title": "处理 Git 冲突",
+        "category": "Git工作流助手"
+      },
+      {
         "command": "gitWorkflowHelper.manageConfiguration",
         "title": "配置管理",
         "category": "Git工作流助手"
@@ -204,6 +209,10 @@
           "when": "workspaceFolderCount > 0"
         },
         {
+          "command": "gitWorkflowHelper.resolveConflicts",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
           "command": "gitWorkflowHelper.manageConfiguration",
           "when": "workspaceFolderCount > 0"
         }
@@ -231,6 +240,11 @@
         },
         {
           "command": "gitWorkflowHelper.pushForceWithLease",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.resolveConflicts",
           "group": "inline",
           "when": "scmProvider == git && gitOpenRepositoryCount > 0"
         },
@@ -276,6 +290,10 @@
         }
       ],
       "gitWorkflowHelper.context": [
+        {
+          "command": "gitWorkflowHelper.resolveConflicts",
+          "group": "0_conflict@0"
+        },
         {
           "command": "gitWorkflowHelper.createBranch",
           "group": "1_branch@1"

@@ -3,6 +3,7 @@ import { BranchBaseService } from './branchBaseService';
 import { BranchConfigManager } from './branchConfigManager';
 import { BranchCreator } from './branchCreator';
 import { AppError, isUserCancelledError, toAppError } from './errors';
+import { GitConflictHandler } from './gitConflictHandler';
 import { GitMergeService } from './gitMergeService';
 import { GitPushService } from './gitPushService';
 import { MergeRevertService } from './mergeRevertService';
@@ -118,6 +119,20 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // 注册冲突处理命令
+    const resolveConflictsCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.resolveConflicts',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const handler = new GitConflictHandler(workspaceRoot);
+                await handler.handleConflictsInteractively();
+            } catch (error: any) {
+                handleCommandError('处理冲突', error);
+            }
+        }
+    );
+
     // 注册 force-with-lease 推送命令
     const pushForceWithLeaseCommand = vscode.commands.registerCommand(
         'gitWorkflowHelper.pushForceWithLease',
@@ -149,6 +164,7 @@ export function activate(context: vscode.ExtensionContext) {
         mergeFeatureBranchCommand,
         showBranchBaseCommand,
         rollbackLastMergeCommand,
+        resolveConflictsCommand,
         pushForceWithLeaseCommand,
         manageConfigurationCommand
     );

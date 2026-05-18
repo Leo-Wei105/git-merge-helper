@@ -15,6 +15,9 @@ export interface BranchBaseInfo {
   candidates?: string[];
 }
 
+/** 进行中的 Git 序列化操作（合并 / 回滚 / cherry-pick / rebase） */
+export type GitSequencerOperation = "merge" | "revert" | "cherry_pick" | "rebase";
+
 /** revert merge 的执行结果 */
 export type RevertMergeResult =
   | { status: "staged" }
@@ -323,6 +326,109 @@ export class GitOperations {
    */
   async abortMerge(): Promise<void> {
     await this.execGitArgs(["merge", "--abort"]);
+  }
+
+  async isCherryPickInProgress(): Promise<boolean> {
+    try {
+      await this.execGitArgs(["rev-parse", "-q", "--verify", "CHERRY_PICK_HEAD"]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async isRebaseInProgress(): Promise<boolean> {
+    try {
+      await this.execGitArgs(["rev-parse", "-q", "--verify", "REBASE_HEAD"]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 检测当前进行中的 Git 序列化操作（优先级：merge > revert > cherry-pick > rebase）
+   */
+  async detectGitSequencerOperation(): Promise<GitSequencerOperation | null> {
+    if (await this.isMergeInProgress()) {
+      return "merge";
+    }
+    if (await this.isRevertInProgress()) {
+      return "revert";
+    }
+    if (await this.isCherryPickInProgress()) {
+      return "cherry_pick";
+    }
+    if (await this.isRebaseInProgress()) {
+      return "rebase";
+    }
+    return null;
+  }
+
+  async isGitSequencerActive(operation: GitSequencerOperation): Promise<boolean> {
+    switch (operation) {
+      case "merge":
+        return this.isMergeInProgress();
+      case "revert":
+        return this.isRevertInProgress();
+      case "cherry_pick":
+        return this.isCherryPickInProgress();
+      case "rebase":
+        return this.isRebaseInProgress();
+    }
+  }
+
+  async abortGitSequencerOperation(operation: GitSequencerOperation): Promise<void> {
+    switch (operation) {
+      case "merge":
+        await this.abortMerge();
+        return;
+      case "revert":
+        await this.abortRevert();
+        return;
+      case "cherry_pick":
+        await this.abortCherryPick();
+        return;
+      case "rebase":
+        await this.abortRebase();
+        return;
+    }
+  }
+
+  async abortCherryPick(): Promise<void> {
+    await this.execGitArgs(["cherry-pick", "--abort"]);
+  }
+
+  async abortRebase(): Promise<void> {
+    await this.execGitArgs(["rebase", "--abort"]);
+  }
+
+  async continueCherryPick(): Promise<void> {
+    await this.execGitArgs(["cherry-pick", "--continue"]);
+  }
+
+  async continueRebase(): Promise<void> {
+    await this.execGitArgs(["rebase", "--continue"]);
+  }
+
+  /**
+   * 合并冲突解决后完成 merge 提交
+   */
+  async completeMergeAfterConflicts(
+    commitMessage: string = "feat: 合并冲突解决"
+  ): Promise<void> {
+    if (!(await this.isMergeInProgress())) {
+      return;
+    }
+    if (await this.checkMergeConflicts()) {
+      throw new AppError("仍存在未解决的冲突", "UNKNOWN", {
+        stage: "completeMergeAfterConflicts",
+      });
+    }
+    if (!(await this.checkStagedChanges())) {
+      await this.stageAllChanges();
+    }
+    await this.commitStagedChanges(commitMessage);
   }
 
   /**

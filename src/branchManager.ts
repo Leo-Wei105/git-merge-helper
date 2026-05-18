@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
-import { AppError } from "./errors";
-import { GitOperations } from "./gitOperations";
 import { BranchUtils } from "./branchUtils";
+import { AppError } from "./errors";
+import { ConflictResolution } from "./gitConflictHandler";
+import { GitOperations } from "./gitOperations";
 
-export type MergeConflictResolution = "resolved" | "aborted" | "pending";
+export type MergeConflictResolution = ConflictResolution;
 
 /**
  * 分支管理类 - 负责分支相关操作和验证
