@@ -106,6 +106,26 @@
           "minimum": 1,
           "maximum": 20,
           "description": "合并冲突时批量打开文件的最大数量（1-20）"
+        },
+        "gitWorkflowHelper.skipHooksOnRevert": {
+          "type": "boolean",
+          "default": false,
+          "description": "使用 revert 回滚时，是否始终跳过 pre-commit 等 Git 钩子（--no-verify）"
+        },
+        "gitWorkflowHelper.mergeRollbackStrategy": {
+          "type": "string",
+          "default": "reset",
+          "enum": [
+            "reset",
+            "revert",
+            "ask"
+          ],
+          "enumDescriptions": [
+            "git reset --hard 到 merge 前（仅当 merge 为分支最新提交时可用，不新增 revert 提交）",
+            "git revert -m 1 生成反向提交（保留历史，适合 merge 之后还有提交或已推送）",
+            "每次回滚前询问选择 reset 或 revert"
+          ],
+          "description": "回滚「合入当前分支的合并」时采用的方式（默认 reset，非 revert）"
         }
       }
     },
@@ -118,6 +138,21 @@
       {
         "command": "gitWorkflowHelper.mergeFeatureBranch",
         "title": "Git工作流助手: 合并功能分支",
+        "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.rollbackLastMerge",
+        "title": "Git工作流助手: 回滚合入当前分支的合并",
+        "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.showBranchBase",
+        "title": "Git工作流助手: 查看当前分支基分支",
+        "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.pushForceWithLease",
+        "title": "Git工作流助手: 强制推送（force-with-lease）",
         "category": "Git工作流助手"
       },
       {
@@ -151,6 +186,18 @@
           "when": "workspaceFolderCount > 0"
         },
         {
+          "command": "gitWorkflowHelper.rollbackLastMerge",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.showBranchBase",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.pushForceWithLease",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
           "command": "gitWorkflowHelper.manageConfiguration",
           "when": "workspaceFolderCount > 0"
         }
@@ -163,6 +210,21 @@
         },
         {
           "command": "gitWorkflowHelper.mergeFeatureBranch",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.rollbackLastMerge",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.showBranchBase",
+          "group": "inline",
+          "when": "scmProvider == git && gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.pushForceWithLease",
           "group": "inline",
           "when": "scmProvider == git && gitOpenRepositoryCount > 0"
         },

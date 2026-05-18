@@ -41,6 +41,31 @@ export function toAppError(error: unknown, fallbackMessage = "未知错误"): Ap
   return new AppError(String(error || fallbackMessage), "UNKNOWN", { cause: error });
 }
 
+/**
+ * 判断 Git 提交是否被 pre-commit / husky / lint-staged 等钩子拦截
+ */
+export function isGitHookFailure(error: unknown): boolean {
+  const message =
+    error instanceof AppError
+      ? error.message
+      : error instanceof Error
+        ? error.message
+        : String(error || "");
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("husky") ||
+    lower.includes("pre-commit") ||
+    lower.includes("precommit") ||
+    lower.includes("commit-msg") ||
+    lower.includes("prepare-commit-msg") ||
+    lower.includes("lint-staged") ||
+    lower.includes("hook declined") ||
+    lower.includes("hook failed") ||
+    lower.includes("running tasks for staged") ||
+    (lower.includes("eslint") && lower.includes("failed"))
+  );
+}
+
 export function isUserCancelledError(error: unknown): boolean {
   const appError = error instanceof AppError ? error : null;
   if (appError?.code === "USER_CANCELLED") {

@@ -1,8 +1,11 @@
 import * as vscode from 'vscode';
+import { BranchBaseService } from './branchBaseService';
 import { BranchConfigManager } from './branchConfigManager';
 import { BranchCreator } from './branchCreator';
 import { AppError, isUserCancelledError, toAppError } from './errors';
 import { GitMergeService } from './gitMergeService';
+import { GitPushService } from './gitPushService';
+import { MergeRevertService } from './mergeRevertService';
 import { openGitWorkflowHelperSettings } from './openExtensionSettings';
 
 async function selectWorkspaceRoot(): Promise<string> {
@@ -87,6 +90,48 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // 注册查看当前分支基分支命令
+    const showBranchBaseCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.showBranchBase',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const branchBaseService = new BranchBaseService(workspaceRoot);
+                await branchBaseService.showCurrentBranchBase();
+            } catch (error: any) {
+                handleCommandError('查询基分支', error);
+            }
+        }
+    );
+
+    // 注册回滚最近一次 merge 命令
+    const rollbackLastMergeCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.rollbackLastMerge',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const mergeRevertService = new MergeRevertService(workspaceRoot);
+                await mergeRevertService.rollbackLastMerge();
+            } catch (error: any) {
+                handleCommandError('回滚合并', error);
+            }
+        }
+    );
+
+    // 注册 force-with-lease 推送命令
+    const pushForceWithLeaseCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.pushForceWithLease',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const gitPushService = new GitPushService(workspaceRoot);
+                await gitPushService.pushForceWithLease();
+            } catch (error: any) {
+                handleCommandError('推送', error);
+            }
+        }
+    );
+
     // 注册配置管理命令
     const manageConfigurationCommand = vscode.commands.registerCommand(
         'gitWorkflowHelper.manageConfiguration',
@@ -102,6 +147,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         createBranchCommand,
         mergeFeatureBranchCommand,
+        showBranchBaseCommand,
+        rollbackLastMergeCommand,
+        pushForceWithLeaseCommand,
         manageConfigurationCommand
     );
 }

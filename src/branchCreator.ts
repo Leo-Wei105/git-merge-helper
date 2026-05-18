@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
 import { BranchConfigManager } from "./branchConfigManager";
 import {
-  BranchCreationOptions,
-  BranchCreationResult,
-  BranchPrefix,
-  DateFormat,
-  GitBranch,
+    BranchCreationOptions,
+    BranchCreationResult,
+    BranchPrefix,
+    DateFormat,
+    GitBranch,
 } from "./branchTypes";
 import { BranchUtils } from "./branchUtils";
-import { GitOperations } from "./gitOperations";
 import { AppError, isUserCancelledError } from "./errors";
+import { GitOperations } from "./gitOperations";
 
 export class BranchCreator {
   private configManager: BranchConfigManager;
@@ -148,6 +148,8 @@ export class BranchCreator {
           // 忽略错误
         }
       }
+
+      await this.gitOps.setBranchCreationBase(branchName, baseBranch);
     } catch (error) {
       throw new Error(`创建分支失败: ${error}`);
     }

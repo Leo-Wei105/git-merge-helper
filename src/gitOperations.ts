@@ -1,10 +1,33 @@
 import { exec, execFile } from "child_process";
 import { promisify } from "util";
-import * as vscode from "vscode";
 import { AppError } from "./errors";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
+
+/** 当前分支的创建基分支解析结果 */
+export interface BranchBaseInfo {
+  branchName: string;
+  baseBranch: string | null;
+  baseCommit?: string;
+  source: "config" | "reflog" | "inferred" | "unknown";
+  /** 多个候选基分支（无法唯一确定时） */
+  candidates?: string[];
+}
+
+/** revert merge 的执行结果 */
+export type RevertMergeResult =
+  | { status: "staged" }
+  | { status: "conflicts"; conflictFiles: string[] };
+
+/** 当前分支历史上最近的一次 merge 提交信息 */
+export interface LatestMergeCommit {
+  hash: string;
+  subject: string;
+  parentHashes: string[];
+  /** 被合并分支的参考名（从第二父提交解析，可能为空） */
+  mergedBranchHint?: string;
+}
 
 /**
  * Git操作类 - 负责所有Git命令操作
@@ -167,6 +190,37 @@ export class GitOperations {
   }
 
   /**
+   * 推送到远程（--force-with-lease，远程有他人新提交时会拒绝）
+   */
+  async pushBranchForceWithLease(
+    branchName: string,
+    remoteName: string = "origin",
+    setUpstream: boolean = false
+  ): Promise<void> {
+    const args = ["push", "--force-with-lease"];
+    if (setUpstream) {
+      args.push("-u");
+    }
+    args.push(remoteName, branchName);
+    await this.execGitArgs(args);
+  }
+
+  /**
+   * 获取当前分支的上游引用（如 origin/main），无上游时返回 undefined
+   */
+  async getBranchUpstream(branchName: string): Promise<string | undefined> {
+    try {
+      return await this.execGitArgs([
+        "rev-parse",
+        "--abbrev-ref",
+        `${branchName}@{upstream}`,
+      ]);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * 检查本地分支是否存在
    */
   async checkLocalBranchExists(branchName: string): Promise<boolean> {
@@ -272,6 +326,241 @@ export class GitOperations {
   }
 
   /**
+   * 是否处于未完成的 merge 状态
+   */
+  async isMergeInProgress(): Promise<boolean> {
+    try {
+      await this.execGitArgs(["rev-parse", "-q", "--verify", "MERGE_HEAD"]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 获取「其他分支合入当前分支」的最近一次 merge 提交。
+   * 使用 --first-parent，只沿当前分支主线查找，避免误选并入历史的、发生在别的分支上的 merge。
+   * revert 时使用 -m 1（第一父提交为合入前的当前分支尖端）。
+   */
+  async getLatestIncomingMergeCommit(
+    branchName?: string
+  ): Promise<LatestMergeCommit | null> {
+    const branch = branchName ?? (await this.getCurrentBranch());
+    if (!branch) {
+      return null;
+    }
+
+    let output: string;
+    try {
+      output = await this.execGitArgs([
+        "log",
+        branch,
+        "-1",
+        "--first-parent",
+        "--merges",
+        "--format=%H%x1e%s%x1e%P",
+      ]);
+    } catch {
+      return null;
+    }
+
+    if (!output) {
+      return null;
+    }
+
+    const parts = output.split("\x1e");
+    if (parts.length < 3) {
+      return null;
+    }
+
+    const [hash, subject, parentsLine] = parts;
+    const parentHashes = parentsLine.trim().split(/\s+/).filter(Boolean);
+    if (parentHashes.length < 2) {
+      return null;
+    }
+
+    const mergedBranchHint = await this.resolveBranchHintForCommit(
+      parentHashes[1],
+      branch
+    );
+
+    return {
+      hash,
+      subject,
+      parentHashes,
+      mergedBranchHint,
+    };
+  }
+
+  /**
+   * 根据提交解析可读的引用名（优先本地分支）
+   */
+  private async resolveBranchHintForCommit(
+    commitHash: string,
+    excludeBranch?: string
+  ): Promise<string | undefined> {
+    try {
+      const branches = await this.execGitArgs([
+        "branch",
+        "-a",
+        "--points-at",
+        commitHash,
+        "--format=%(refname:short)",
+      ]);
+      const candidates = branches
+        .split("\n")
+        .map((b) => b.trim())
+        .filter((b) => {
+          if (!b || b.endsWith("/HEAD")) {
+            return false;
+          }
+          if (!excludeBranch) {
+            return true;
+          }
+          return (
+            b !== excludeBranch &&
+            b !== `origin/${excludeBranch}` &&
+            b !== `refs/heads/${excludeBranch}`
+          );
+        });
+      if (candidates.length === 0) {
+        return undefined;
+      }
+      const local = candidates.find((b) => !b.startsWith("origin/"));
+      return local ?? candidates[0];
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * 是否处于未完成的 revert 状态
+   */
+  async isRevertInProgress(): Promise<boolean> {
+    try {
+      await this.execGitArgs(["rev-parse", "-q", "--verify", "REVERT_HEAD"]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 硬重置到指定提交（丢弃该提交之后的本地提交）
+   */
+  async resetHardToCommit(commitHash: string): Promise<void> {
+    await this.execGitArgs(["reset", "--hard", commitHash]);
+  }
+
+  /**
+   * 中止进行中的 revert
+   */
+  async abortRevert(): Promise<void> {
+    await this.execGitArgs(["revert", "--abort"]);
+  }
+
+  /**
+   * 在冲突解决后继续完成 revert
+   * @param skipHooks 为 true 时用 git commit --no-verify 完成（revert --continue 不支持 --no-verify）
+   */
+  async continueRevert(options?: { skipHooks?: boolean }): Promise<void> {
+    if (options?.skipHooks) {
+      await this.execGitArgs(["commit", "--no-edit", "--no-verify"]);
+      return;
+    }
+    await this.execGitArgs(["revert", "--continue", "--no-edit"]);
+  }
+
+  /**
+   * 统计某提交之后当前分支新增的提交数
+   */
+  async countCommitsSince(commitHash: string): Promise<number> {
+    try {
+      const count = await this.execGitArgs([
+        "rev-list",
+        "--count",
+        `${commitHash}..HEAD`,
+      ]);
+      return parseInt(count, 10) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * 预检 revert 是否会产生冲突（执行后立即 abort，不改变仓库最终状态）
+   */
+  async previewRevertMergeConflicts(
+    commitHash: string,
+    mainlineParent: number = 1
+  ): Promise<string[]> {
+    try {
+      await this.execGitArgs([
+        "revert",
+        "-m",
+        String(mainlineParent),
+        "--no-commit",
+        commitHash,
+      ]);
+    } catch {
+      // 可能已部分应用并产生冲突
+    }
+
+    const conflictFiles = await this.getConflictFiles();
+
+    try {
+      if (await this.isRevertInProgress()) {
+        await this.abortRevert();
+      }
+    } catch {
+      // 尽力恢复干净状态
+    }
+
+    return conflictFiles;
+  }
+
+  /**
+   * 安全回滚 merge：先 --no-commit，无冲突再 --continue 生成提交
+   */
+  async revertMergeCommitSafe(
+    commitHash: string,
+    mainlineParent: number = 1
+  ): Promise<RevertMergeResult> {
+    try {
+      await this.execGitArgs([
+        "revert",
+        "-m",
+        String(mainlineParent),
+        "--no-commit",
+        commitHash,
+      ]);
+    } catch {
+      if (
+        (await this.isRevertInProgress()) ||
+        (await this.checkMergeConflicts())
+      ) {
+        return {
+          status: "conflicts",
+          conflictFiles: await this.getConflictFiles(),
+        };
+      }
+      throw AppError.gitFailed(
+        "启动 revert 失败",
+        "revertMergeCommitSafe"
+      );
+    }
+
+    if (await this.checkMergeConflicts()) {
+      return {
+        status: "conflicts",
+        conflictFiles: await this.getConflictFiles(),
+      };
+    }
+
+    return { status: "staged" };
+  }
+
+  /**
    * 确保分支有正确的上游关联
    */
   async ensureBranchUpstream(branchName: string): Promise<void> {
@@ -306,6 +595,311 @@ export class GitOperations {
         }
       }
     }
+  }
+
+  private branchBaseConfigKey(branchName: string): string {
+    return `branch.${branchName}.gitWorkflowHelper.base`;
+  }
+
+  /**
+   * 记录分支创建时所基于的分支（写入本地 git config）
+   */
+  async setBranchCreationBase(
+    branchName: string,
+    baseBranch: string
+  ): Promise<void> {
+    await this.execGitArgs([
+      "config",
+      this.branchBaseConfigKey(branchName),
+      baseBranch,
+    ]);
+  }
+
+  /**
+   * 读取插件记录的创建基分支
+   */
+  async getBranchCreationBase(branchName: string): Promise<string | undefined> {
+    try {
+      const value = await this.execGitArgs([
+        "config",
+        "--get",
+        this.branchBaseConfigKey(branchName),
+      ]);
+      return value || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * 列出本地与远程分支名（去重）
+   */
+  async listBranchNames(): Promise<string[]> {
+    const names = new Set<string>();
+    const local = await this.execGitArgs(["branch", "--format=%(refname:short)"]);
+    local
+      .split("\n")
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .forEach((n) => names.add(n));
+
+    try {
+      const remote = await this.execGitArgs([
+        "branch",
+        "-r",
+        "--format=%(refname:short)",
+      ]);
+      remote
+        .split("\n")
+        .map((n) => n.trim())
+        .filter((n) => n && !n.includes("HEAD"))
+        .forEach((n) => names.add(n));
+    } catch {
+      // 无远程分支时忽略
+    }
+
+    return [...names];
+  }
+
+  /**
+   * 解析当前分支基于哪个分支创建
+   */
+  async resolveBranchBaseInfo(
+    branchName: string,
+    extraCandidates: string[] = []
+  ): Promise<BranchBaseInfo> {
+    const fromConfig = await this.getBranchCreationBase(branchName);
+    if (fromConfig) {
+      return {
+        branchName,
+        baseBranch: fromConfig,
+        source: "config",
+        baseCommit: await this.getBranchForkCommit(branchName),
+      };
+    }
+
+    const fromReflog = await this.inferBaseFromReflog(branchName);
+    if (fromReflog.baseBranch) {
+      return {
+        branchName,
+        baseBranch: fromReflog.baseBranch,
+        baseCommit: fromReflog.baseCommit,
+        source: "reflog",
+      };
+    }
+    if (fromReflog.candidates?.length) {
+      return {
+        branchName,
+        baseBranch: null,
+        baseCommit: fromReflog.baseCommit,
+        source: "reflog",
+        candidates: fromReflog.candidates,
+      };
+    }
+
+    const candidates = [
+      ...new Set([...(await this.listBranchNames()), ...extraCandidates]),
+    ].filter((name) => name !== branchName);
+
+    const inferred = await this.inferBaseFromForkPoint(branchName, candidates);
+    if (inferred.baseBranch) {
+      return {
+        branchName,
+        baseBranch: inferred.baseBranch,
+        baseCommit: inferred.baseCommit,
+        source: "inferred",
+      };
+    }
+    if (inferred.candidates?.length) {
+      return {
+        branchName,
+        baseBranch: null,
+        candidates: inferred.candidates,
+        source: "inferred",
+      };
+    }
+
+    return { branchName, baseBranch: null, source: "unknown" };
+  }
+
+  /**
+   * 获取分支创建时指向的提交（reflog 最早一条）
+   */
+  private async getBranchForkCommit(branchName: string): Promise<string | undefined> {
+    try {
+      const hash = await this.execGitArgs([
+        "reflog",
+        "show",
+        branchName,
+        "--reverse",
+        "--format=%H",
+        "-1",
+      ]);
+      return hash || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private normalizeBranchRef(ref: string): string {
+    return ref
+      .replace(/^refs\/heads\//, "")
+      .replace(/^refs\/remotes\/origin\//, "origin/")
+      .trim();
+  }
+
+  private async inferBaseFromReflog(branchName: string): Promise<{
+    baseBranch?: string;
+    baseCommit?: string;
+    candidates?: string[];
+  }> {
+    let output: string;
+    try {
+      output = await this.execGitArgs([
+        "reflog",
+        "show",
+        branchName,
+        "--format=%H %gs",
+      ]);
+    } catch {
+      return {};
+    }
+
+    const entries = output.split("\n").filter((line) => line.trim());
+    if (entries.length === 0) {
+      return {};
+    }
+
+    const chronological = [...entries].reverse();
+
+    for (const line of chronological) {
+      const spaceIdx = line.indexOf(" ");
+      if (spaceIdx <= 0) {
+        continue;
+      }
+      const hash = line.slice(0, spaceIdx);
+      const message = line.slice(spaceIdx + 1);
+
+      const createdMatch = message.match(/^branch: Created from (.+)$/);
+      if (createdMatch) {
+        const ref = createdMatch[1].trim();
+        if (ref !== "HEAD") {
+          return {
+            baseBranch: this.normalizeBranchRef(ref),
+            baseCommit: hash,
+          };
+        }
+        const pointingAt = await this.getBranchesPointingAtCommit(
+          hash,
+          branchName
+        );
+        if (pointingAt.length === 1) {
+          return { baseBranch: pointingAt[0], baseCommit: hash };
+        }
+        if (pointingAt.length > 1) {
+          return { candidates: pointingAt, baseCommit: hash };
+        }
+      }
+
+      const checkoutMatch = message.match(/^checkout: moving from (.+) to (.+)$/);
+      if (checkoutMatch && checkoutMatch[2] === branchName) {
+        return {
+          baseBranch: this.normalizeBranchRef(checkoutMatch[1]),
+          baseCommit: hash,
+        };
+      }
+    }
+
+    return {};
+  }
+
+  private async getBranchesPointingAtCommit(
+    commitHash: string,
+    excludeBranch: string
+  ): Promise<string[]> {
+    try {
+      const branches = await this.execGitArgs([
+        "branch",
+        "-a",
+        "--points-at",
+        commitHash,
+        "--format=%(refname:short)",
+      ]);
+      return branches
+        .split("\n")
+        .map((b) => b.trim())
+        .filter((b) => b && !b.endsWith("/HEAD") && b !== excludeBranch);
+    } catch {
+      return [];
+    }
+  }
+
+  private async inferBaseFromForkPoint(
+    branchName: string,
+    candidates: string[]
+  ): Promise<{
+    baseBranch?: string;
+    baseCommit?: string;
+    candidates?: string[];
+  }> {
+    const scores: Array<{ name: string; behind: number; ahead: number }> = [];
+
+    for (const candidate of candidates) {
+      if (candidate === branchName) {
+        continue;
+      }
+      try {
+        const mergeBase = await this.execGitArgs([
+          "merge-base",
+          branchName,
+          candidate,
+        ]);
+        const behind = parseInt(
+          await this.execGitArgs([
+            "rev-list",
+            "--count",
+            `${mergeBase}..${candidate}`,
+          ]),
+          10
+        );
+        const ahead = parseInt(
+          await this.execGitArgs([
+            "rev-list",
+            "--count",
+            `${mergeBase}..${branchName}`,
+          ]),
+          10
+        );
+        if (ahead > 0) {
+          scores.push({ name: candidate, behind, ahead });
+        }
+      } catch {
+        // 跳过无法比较的分支
+      }
+    }
+
+    if (scores.length === 0) {
+      return {};
+    }
+
+    scores.sort((a, b) => a.behind - b.behind || a.ahead - b.ahead);
+    const best = scores[0];
+    const ties = scores.filter(
+      (s) => s.behind === best.behind && Math.abs(s.ahead - best.ahead) <= 2
+    );
+
+    if (ties.length > 1) {
+      return { candidates: ties.map((t) => t.name) };
+    }
+
+    let baseCommit: string | undefined;
+    try {
+      baseCommit = await this.execGitArgs(["merge-base", branchName, best.name]);
+    } catch {
+      // ignore
+    }
+
+    return { baseBranch: best.name, baseCommit };
   }
 
   /**

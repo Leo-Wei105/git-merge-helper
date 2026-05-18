@@ -133,8 +133,7 @@ export class MergeWorkflow {
           const shouldCommit = await vscode.window.showInformationMessage(
             "冲突已解决，是否提交合并结果？",
             { modal: true },
-            "提交",
-            "取消"
+            "提交"
           );
 
           if (shouldCommit === "提交") {
