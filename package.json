@@ -2,7 +2,7 @@
   "name": "git-workflow-helper",
   "displayName": "Git工作流助手",
   "description": "Git 工作流：规范分支、引导合并、格式化提交（Conventional Commits）、冲突处理、批量 cherry-pick、merge 回滚与 force-with-lease。",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "Leo-Wei105",
   "repository": {
     "type": "git",
