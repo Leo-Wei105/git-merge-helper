@@ -253,6 +253,11 @@
         "command": "gitWorkflowHelper.manageConfiguration",
         "title": "配置管理",
         "category": "Git工作流助手"
+      },
+      {
+        "command": "gitWorkflowHelper.manageGlobalGitConfig",
+        "title": "查看/修改全局 Git 配置",
+        "category": "Git工作流助手"
       }
     ],
     "submenus": [
@@ -319,6 +324,10 @@
         },
         {
           "command": "gitWorkflowHelper.manageConfiguration",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "gitWorkflowHelper.manageGlobalGitConfig",
           "when": "workspaceFolderCount > 0"
         }
       ],
@@ -453,6 +462,10 @@
         {
           "command": "gitWorkflowHelper.manageConfiguration",
           "group": "9_config@9"
+        },
+        {
+          "command": "gitWorkflowHelper.manageGlobalGitConfig",
+          "group": "9_config@8"
         }
       ]
     }

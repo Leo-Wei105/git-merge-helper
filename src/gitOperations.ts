@@ -1135,6 +1135,31 @@ export class GitOperations {
   }
 
   /**
+   * 获取全局 Git 配置
+   */
+  async getGlobalGitConfig(key: string): Promise<string> {
+    try {
+      return (await this.execGitArgs(["config", "--global", key])).trim();
+    } catch {
+      return "";
+    }
+  }
+
+  /**
+   * 设置全局 Git 配置
+   */
+  async setGlobalGitConfig(key: string, value: string): Promise<void> {
+    await this.execGitArgs(["config", "--global", key, value]);
+  }
+
+  /**
+   * 移除全局 Git 配置
+   */
+  async unsetGlobalGitConfig(key: string): Promise<void> {
+    await this.execGitArgs(["config", "--global", "--unset", key]);
+  }
+
+  /**
    * 获取工作区根目录
    */
   getWorkspaceRoot(): string {

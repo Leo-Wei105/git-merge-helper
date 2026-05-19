@@ -11,6 +11,7 @@ import { GitPushService } from './gitPushService';
 import { GitPullService } from './gitPullService';
 import { MergeRevertService } from './mergeRevertService';
 import { openGitWorkflowHelperSettings } from './openExtensionSettings';
+import { GlobalGitConfigService } from './globalGitConfigService';
 
 async function selectWorkspaceRoot(): Promise<string> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -217,6 +218,20 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // 注册查看/修改全局 Git 配置命令
+    const manageGlobalGitConfigCommand = vscode.commands.registerCommand(
+        'gitWorkflowHelper.manageGlobalGitConfig',
+        async () => {
+            try {
+                const workspaceRoot = await selectWorkspaceRoot();
+                const service = new GlobalGitConfigService(workspaceRoot);
+                await service.manageConfig();
+            } catch (error: any) {
+                handleCommandError('全局配置管理', error);
+            }
+        }
+    );
+
     context.subscriptions.push(
         pullAllBranchesCommand,
         createBranchCommand,
@@ -228,7 +243,8 @@ export function activate(context: vscode.ExtensionContext) {
         formattedCommitCommand,
         copyFormattedCommitMessageCommand,
         pushForceWithLeaseCommand,
-        manageConfigurationCommand
+        manageConfigurationCommand,
+        manageGlobalGitConfigCommand
     );
 }
 

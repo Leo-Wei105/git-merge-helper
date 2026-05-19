@@ -2,6 +2,12 @@
 
 本项目的所有重要变更均记录在此文件（格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)）。
 
+## [0.4.0] - 2026-05-19
+
+### 新增
+
+- **查看并修改全局 Git 配置**：提供图形化界面（QuickPick 和 InputBox），用于查看和修改常用的全局 Git 配置（如 `user.name`、`user.email`、`core.autocrlf`、`init.defaultBranch`），支持清空配置。
+
 ## [0.3.0] - 2026-05-18
 
 ### 新增

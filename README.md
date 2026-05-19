@@ -57,6 +57,7 @@
 | 查看当前分支基分支 | 显示创建时记录的基分支或 reflog 推断结果 |
 | 强制推送（force-with-lease） | `git push --force-with-lease` |
 | 配置管理 | 打开本扩展相关设置（多根工作区时优化为按扩展筛选的用户设置） |
+| 查看/修改全局 Git 配置 | 以图形化界面查看和修改常用全局 Git 配置（如 user.name、user.email 等） |
 
 ### 调用方式
 
@@ -190,7 +191,7 @@ npm run publish      # 发布到 VS Code Marketplace（需 vsce 登录）
 
 ## 版本与更新日志
 
-- **当前发布版本**：`0.3.0`（与 `package.json` 中 `version` 一致）
+- **当前发布版本**：`0.4.0`（与 `package.json` 中 `version` 一致）
 - **详细变更**：见 [`CHANGELOG.md`](./CHANGELOG.md)
 
 ---
