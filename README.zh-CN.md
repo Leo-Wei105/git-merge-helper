@@ -1,5 +1,7 @@
 # Git 工作流助手
 
+[English](./README.md)
+
 一个面向 VS Code / Cursor 的 Git 工作流扩展：规范分支创建、引导式合并、冲突处理、格式化提交、批量 cherry-pick 等。代码按模块拆分，便于维护与扩展。
 
 **市场标识**：发布者 `Leo-Wei105`，扩展 ID `Leo-Wei105.git-workflow-helper`。
@@ -192,7 +194,7 @@ npm run publish      # 发布到 VS Code Marketplace（需 vsce 登录）
 
 ## 版本与更新日志
 
-- **当前发布版本**：`0.5.1`（与 `package.json` 中 `version` 一致）
+- **当前发布版本**：`0.5.4`（与 `package.json` 中 `version` 一致）
 - **详细变更**：见 [`CHANGELOG.md`](./CHANGELOG.md)
 
 ---

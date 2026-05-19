@@ -4,6 +4,30 @@
 
 All notable changes to this project will be documented in this file (format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)).
 
+## [0.5.4] - 2026-05-19
+
+### Changed
+
+- **Documentation Alignment**: Fully aligned English and Chinese README content — added missing Configuration Reference, Project Structure, Local Development & Packaging, Troubleshooting, Disclaimer, and Version & Changelog sections to the English README.
+- **Changelog Backfill**: Added missing changelog entries for versions 0.5.2 and 0.5.3.
+
+### Fixed
+
+- **Chinese README**: Added missing `[English]` navigation link; corrected stale version reference from `0.5.1` to `0.5.4`.
+
+## [0.5.3] - 2026-05-19
+
+### Changed
+
+- **Packaging Cleanup**: Updated `.vscodeignore` to exclude development scripts (`check-mojibake.js`, `gen-l10n.js`, `i18n-extract.json`, etc.), Chinese documentation duplicates (`README.zh-CN.md`, `CHANGELOG.zh-CN.md`), temporary files, and macOS `.DS_Store` — resulting in a smaller, cleaner `.vsix` package.
+- **Gitignore**: Added `.DS_Store`, `temp_vsix/`, and `temp.zip` to `.gitignore`.
+
+## [0.5.2] - 2026-05-19
+
+### Changed
+
+- **Version Bump**: Patch version bump (no functional changes).
+
 ## [0.5.1] - 2026-05-19
 
 ### Fixed
