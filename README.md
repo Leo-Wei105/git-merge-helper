@@ -53,6 +53,7 @@ A Git workflow extension for VS Code / Cursor: standardizes branch creation, gui
 | Force Push (force-with-lease) | `git push --force-with-lease` |
 | Manage Configuration | Opens extension-related settings (optimized for multi-root workspaces to filter by extension). |
 | Manage Global Git Config | View and modify common global Git configs (e.g. user.name, user.email) through GUI. |
+| **Internationalization (i18n)** | Automatically switches between English and Chinese environments based on VS Code language settings. |
 
 ### How to use
 - **Command Palette**: `Ctrl+Shift+P` / `Cmd+Shift+P`, search for "Git Workflow Helper".
