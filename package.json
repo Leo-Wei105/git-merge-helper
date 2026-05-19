@@ -508,5 +508,6 @@
     "scm"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "l10n": "./l10n"
 }

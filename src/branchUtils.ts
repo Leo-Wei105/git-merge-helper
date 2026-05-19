@@ -1,5 +1,5 @@
+import * as vscode from "vscode";
 import { DateFormat, ValidationResult } from './branchTypes';
-
 export class BranchUtils {
     /**
      * 根据格式生成日期字符串
@@ -8,7 +8,6 @@ export class BranchUtils {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-
         switch (format) {
             case 'yyyyMMdd':
                 return `${year}${month}${day}`;
@@ -20,7 +19,6 @@ export class BranchUtils {
                 return `${year}${month}${day}`;
         }
     }
-
     /**
      * 验证分支描述信息
      */
@@ -28,15 +26,13 @@ export class BranchUtils {
         if (!description || description.trim().length === 0) {
             return {
                 isValid: false,
-                error: '描述信息不能为空'
+                error: vscode.l10n.t("\u63CF\u8FF0\u4FE1\u606F\u4E0D\u80FD\u4E3A\u7A7A")
             };
         }
-
         return {
             isValid: true
         };
     }
-
     /**
      * 验证分支前缀
      */
@@ -44,24 +40,21 @@ export class BranchUtils {
         if (!prefix || prefix.trim().length === 0) {
             return {
                 isValid: false,
-                error: '分支前缀不能为空'
+                error: vscode.l10n.t("\u5206\u652F\u524D\u7F00\u4E0D\u80FD\u4E3A\u7A7A")
             };
         }
-
         // 检查是否包含特殊字符
         const validPattern = /^[a-zA-Z0-9_-]+$/;
         if (!validPattern.test(prefix)) {
             return {
                 isValid: false,
-                error: '分支前缀只能包含字母、数字、下划线和短横线'
+                error: vscode.l10n.t("\u5206\u652F\u524D\u7F00\u53EA\u80FD\u5305\u542B\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u548C\u77ED\u6A2A\u7EBF")
             };
         }
-
         return {
             isValid: true
         };
     }
-
     /**
      * 验证分支名称
      */
@@ -69,15 +62,13 @@ export class BranchUtils {
         if (!branchName || branchName.trim().length === 0) {
             return {
                 isValid: false,
-                error: '分支名称不能为空'
+                error: vscode.l10n.t("\u5206\u652F\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A")
             };
         }
-
         return {
             isValid: true
         };
     }
-
     /**
      * 生成分支名称
      */
@@ -92,7 +83,6 @@ export class BranchUtils {
         const template = format && format.trim().length > 0
             ? format
             : '{prefix}/{date}/{description}_{username}';
-
         return template
             .replace(/\{prefix\}/g, prefix)
             .replace(/\{date\}/g, date)
@@ -100,4 +90,3 @@ export class BranchUtils {
             .replace(/\{username\}/g, username);
     }
 }
-
