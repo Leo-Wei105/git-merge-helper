@@ -26,7 +26,7 @@ export class BranchUtils {
         if (!description || description.trim().length === 0) {
             return {
                 isValid: false,
-                error: vscode.l10n.t("\u63CF\u8FF0\u4FE1\u606F\u4E0D\u80FD\u4E3A\u7A7A")
+                error: vscode.l10n.t("描述信息不能为空")
             };
         }
         return {
@@ -40,7 +40,7 @@ export class BranchUtils {
         if (!prefix || prefix.trim().length === 0) {
             return {
                 isValid: false,
-                error: vscode.l10n.t("\u5206\u652F\u524D\u7F00\u4E0D\u80FD\u4E3A\u7A7A")
+                error: vscode.l10n.t("分支前缀不能为空")
             };
         }
         // 检查是否包含特殊字符
@@ -48,7 +48,7 @@ export class BranchUtils {
         if (!validPattern.test(prefix)) {
             return {
                 isValid: false,
-                error: vscode.l10n.t("\u5206\u652F\u524D\u7F00\u53EA\u80FD\u5305\u542B\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u548C\u77ED\u6A2A\u7EBF")
+                error: vscode.l10n.t("分支前缀只能包含字母、数字、下划线和短横线")
             };
         }
         return {
@@ -62,7 +62,7 @@ export class BranchUtils {
         if (!branchName || branchName.trim().length === 0) {
             return {
                 isValid: false,
-                error: vscode.l10n.t("\u5206\u652F\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A")
+                error: vscode.l10n.t("分支名称不能为空")
             };
         }
         return {

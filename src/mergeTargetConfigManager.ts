@@ -40,7 +40,7 @@ export class MergeTargetConfigManager {
     async addTargetBranch(name: string): Promise<void> {
         const currentBranches = this.getTargetBranches();
         if (currentBranches.some((branch) => branch.name === name)) {
-            throw new Error(vscode.l10n.t("\u5206\u652F \"{0}\" \u5DF2\u5B58\u5728", String(name)));
+            throw new Error(vscode.l10n.t("分支 \"{0}\" 已存在", String(name)));
         }
         const newBranches = [...currentBranches, { name, description: name }];
         const branchStrings = this.serializeTargetBranches(newBranches);
@@ -49,7 +49,7 @@ export class MergeTargetConfigManager {
     async removeTargetBranch(name: string): Promise<void> {
         const currentBranches = this.getTargetBranches();
         if (currentBranches.length <= 1) {
-            throw new Error(vscode.l10n.t("\u81F3\u5C11\u9700\u8981\u4FDD\u7559\u4E00\u4E2A\u76EE\u6807\u5206\u652F"));
+            throw new Error(vscode.l10n.t("至少需要保留一个目标分支"));
         }
         const newBranches = currentBranches.filter((branch) => branch.name !== name);
         const branchStrings = this.serializeTargetBranches(newBranches);

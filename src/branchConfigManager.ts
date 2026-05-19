@@ -150,7 +150,7 @@ export class BranchConfigManager {
             ? this.getWorkspaceConfiguration().branchPrefixes
             : this.getGlobalConfiguration().branchPrefixes;
         if (prefixes.some(p => p.prefix === prefix)) {
-            throw new Error(vscode.l10n.t("\u5206\u652F\u524D\u7F00\u5DF2\u5B58\u5728"));
+            throw new Error(vscode.l10n.t("分支前缀已存在"));
         }
         prefixes.push({ prefix, description: description || prefix });
         await this.updateBranchPrefixes(prefixes, target);
@@ -164,7 +164,7 @@ export class BranchConfigManager {
             : this.getGlobalConfiguration().branchPrefixes;
         const index = prefixes.findIndex(p => p.prefix === prefix);
         if (index === -1) {
-            throw new Error(vscode.l10n.t("\u5206\u652F\u524D\u7F00\u4E0D\u5B58\u5728"));
+            throw new Error(vscode.l10n.t("分支前缀不存在"));
         }
         prefixes.splice(index, 1);
         await this.updateBranchPrefixes(prefixes, target);

@@ -98,18 +98,18 @@ function matchesTimeRange(commit: CherryPickCommitInfo, since?: Date, until?: Da
 function describeFilterState(state: CherryPickFilterState): string {
     const parts: string[] = [];
     if (state.mergeMode === "exclude_merge") {
-        parts.push(vscode.l10n.t("\u5DF2\u6392\u9664 merge"));
+        parts.push(vscode.l10n.t("已排除 merge"));
     }
     else if (state.mergeMode === "only_merge") {
-        parts.push(vscode.l10n.t("\u4EC5 merge"));
+        parts.push(vscode.l10n.t("仅 merge"));
     }
     if (state.authors.length > 0) {
         parts.push(state.authors.join(", "));
     }
     if (state.since || state.until) {
-        parts.push(vscode.l10n.t("\u5DF2\u9650\u65F6\u95F4"));
+        parts.push(vscode.l10n.t("已限时间"));
     }
-    return parts.length > 0 ? parts.join(" · ") : vscode.l10n.t("\u672A\u7B5B\u9009");
+    return parts.length > 0 ? parts.join(" · ") : vscode.l10n.t("未筛选");
 }
 function collectUniqueAuthors(commits: CherryPickCommitInfo[]): string[] {
     return [...new Set(commits.map((c) => c.author.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -143,23 +143,23 @@ export const configureAndFilterCommits = selectCommitsForCherryPick;
 async function askFilterEntry(): Promise<FilterEntryMode> {
     const picked = await vscode.window.showQuickPick([
         {
-            label: vscode.l10n.t("$(star-full) \u63A8\u8350"),
-            description: vscode.l10n.t("\u6392\u9664 merge \u63D0\u4EA4\uFF0C\u8FDB\u5165\u5217\u8868\u591A\u9009\uFF08\u591A\u6570\u60C5\u51B5\u9009\u8FD9\u9879\uFF09"),
+            label: vscode.l10n.t("$(star-full) 推荐"),
+            description: vscode.l10n.t("排除 merge 提交，进入列表多选（多数情况选这项）"),
             value: "recommended" as const,
         },
         {
-            label: vscode.l10n.t("$(settings-gear) \u81EA\u5B9A\u4E49\u7B5B\u9009"),
-            description: vscode.l10n.t("\u6700\u591A 3 \u6B65\uFF1Amerge \u2192 \u63D0\u4EA4\u4EBA \u2192 \u65F6\u95F4"),
+            label: vscode.l10n.t("$(settings-gear) 自定义筛选"),
+            description: vscode.l10n.t("最多 3 步：merge → 提交人 → 时间"),
             value: "custom" as const,
         },
         {
-            label: vscode.l10n.t("$(list-flat) \u663E\u793A\u5168\u90E8"),
-            description: vscode.l10n.t("\u542B merge \u5728\u5185\uFF0C\u4E0D\u8FC7\u6EE4"),
+            label: vscode.l10n.t("$(list-flat) 显示全部"),
+            description: vscode.l10n.t("含 merge 在内，不过滤"),
             value: "all" as const,
         },
     ], {
-        title: vscode.l10n.t("\u6279\u91CF\u4F18\u9009"),
-        placeHolder: vscode.l10n.t("\u9009\u62E9\u5217\u8868\u8303\u56F4\uFF08Enter \u786E\u8BA4\uFF09"),
+        title: vscode.l10n.t("批量优选"),
+        placeHolder: vscode.l10n.t("选择列表范围（Enter 确认）"),
     });
     return picked?.value ?? "cancel";
 }
@@ -167,13 +167,13 @@ async function askFilterEntry(): Promise<FilterEntryMode> {
 async function runCompactCustomFilters(allCommits: CherryPickCommitInfo[]): Promise<CherryPickFilterState | null> {
     const mergeMode = await vscode.window.showQuickPick([
         {
-            label: vscode.l10n.t("\u6392\u9664 merge \u63D0\u4EA4"),
-            description: vscode.l10n.t("\u63A8\u8350"),
+            label: vscode.l10n.t("排除 merge 提交"),
+            description: vscode.l10n.t("推荐"),
             value: "exclude_merge" as const,
         },
-        { label: vscode.l10n.t("\u663E\u793A\u5168\u90E8"), value: "all" as const },
-        { label: vscode.l10n.t("\u4EC5 merge \u63D0\u4EA4"), value: "only_merge" as const },
-    ], { title: "1/3 · Merge", placeHolder: vscode.l10n.t("\u9009\u62E9 merge \u89C4\u5219") });
+        { label: vscode.l10n.t("显示全部"), value: "all" as const },
+        { label: vscode.l10n.t("仅 merge 提交"), value: "only_merge" as const },
+    ], { title: "1/3 · Merge", placeHolder: vscode.l10n.t("选择 merge 规则") });
     if (!mergeMode) {
         return null;
     }
@@ -199,8 +199,8 @@ async function pickAuthorsStep(allCommits: CherryPickCommitInfo[]): Promise<stri
     }
     const picked = await vscode.window.showQuickPick([
         {
-            label: vscode.l10n.t("$(check) \u4E0D\u9650\u63D0\u4EA4\u4EBA"),
-            description: vscode.l10n.t("\u8DF3\u8FC7\u6B64\u6761\u4EF6"),
+            label: vscode.l10n.t("$(check) 不限提交人"),
+            description: vscode.l10n.t("跳过此条件"),
             value: "__all__",
         },
         ...unique.map((author) => ({
@@ -208,8 +208,8 @@ async function pickAuthorsStep(allCommits: CherryPickCommitInfo[]): Promise<stri
             value: author,
         })),
     ], {
-        title: vscode.l10n.t("2/3 \u00B7 \u63D0\u4EA4\u4EBA"),
-        placeHolder: vscode.l10n.t("\u53EF\u591A\u9009\uFF1B\u9009\u300C\u4E0D\u9650\u300D\u6216\u7559\u7A7A\u5373\u5168\u90E8"),
+        title: vscode.l10n.t("2/3 · 提交人"),
+        placeHolder: vscode.l10n.t("可多选；选「不限」或留空即全部"),
         canPickMany: true,
     });
     if (!picked) {
@@ -227,14 +227,14 @@ async function pickTimeStep(): Promise<{
     const now = new Date();
     const picked = await vscode.window.showQuickPick([
         {
-            label: vscode.l10n.t("$(check) \u4E0D\u9650\u65F6\u95F4"),
-            description: vscode.l10n.t("\u8DF3\u8FC7\u6B64\u6761\u4EF6"),
+            label: vscode.l10n.t("$(check) 不限时间"),
+            description: vscode.l10n.t("跳过此条件"),
             value: "none",
         },
-        { label: vscode.l10n.t("\u6700\u8FD1 7 \u5929"), value: "7d" },
-        { label: vscode.l10n.t("\u6700\u8FD1 30 \u5929"), value: "30d" },
-        { label: vscode.l10n.t("\u6700\u8FD1 90 \u5929"), value: "90d" },
-    ], { title: vscode.l10n.t("3/3 \u00B7 \u65F6\u95F4"), placeHolder: vscode.l10n.t("\u9009\u62E9\u65F6\u95F4\u8303\u56F4") });
+        { label: vscode.l10n.t("最近 7 天"), value: "7d" },
+        { label: vscode.l10n.t("最近 30 天"), value: "30d" },
+        { label: vscode.l10n.t("最近 90 天"), value: "90d" },
+    ], { title: vscode.l10n.t("3/3 · 时间"), placeHolder: vscode.l10n.t("选择时间范围") });
     if (!picked) {
         return undefined;
     }
@@ -261,7 +261,7 @@ function pickCommitsWithSearch(allCommits: CherryPickCommitInfo[], filterState: 
     const priority = getCherryPickFilterPriorityFromConfig();
     const filtered = applyCherryPickFilters(allCommits, filterState, priority);
     if (filtered.length === 0) {
-        vscode.window.showWarningMessage(vscode.l10n.t("\u6CA1\u6709\u7B26\u5408\u6761\u4EF6\u7684\u63D0\u4EA4\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u7B5B\u9009\u65B9\u5F0F"));
+        vscode.window.showWarningMessage(vscode.l10n.t("没有符合条件的提交，请重新选择筛选方式"));
         return selectCommitsForCherryPick(allCommits);
     }
     return new Promise((resolve) => {
@@ -277,12 +277,12 @@ function pickCommitsWithSearch(allCommits: CherryPickCommitInfo[], filterState: 
         quickPick.canSelectMany = true;
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
-        quickPick.placeholder = vscode.l10n.t("\u8F93\u5165\u5173\u952E\u5B57\u641C\u7D22\uFF1B\u53EF\u591A\u9009\uFF1B\u6309\u4ECE\u65E7\u5230\u65B0\u987A\u5E8F\u4F18\u9009");
-        quickPick.title = vscode.l10n.t("\u9009\u62E9\u63D0\u4EA4\uFF08{0}/{1}\uFF09\u00B7 {2}", String(filtered.length), String(allCommits.length), String(describeFilterState(filterState)));
+        quickPick.placeholder = vscode.l10n.t("输入关键字搜索；可多选；按从旧到新顺序优选");
+        quickPick.title = vscode.l10n.t("选择提交（{0}/{1}）· {2}", String(filtered.length), String(allCommits.length), String(describeFilterState(filterState)));
         quickPick.buttons = [
             {
                 iconPath: new vscode.ThemeIcon("filter"),
-                tooltip: vscode.l10n.t("\u91CD\u65B0\u9009\u62E9\u7B5B\u9009\u65B9\u5F0F"),
+                tooltip: vscode.l10n.t("重新选择筛选方式"),
             },
         ];
         const bindItems = (commits: CherryPickCommitInfo[]) => {

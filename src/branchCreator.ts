@@ -22,12 +22,12 @@ export class BranchCreator {
         try {
             const username = await this.gitOps.execGitCommand("git config user.name");
             if (!username) {
-                throw new Error(vscode.l10n.t("\u672A\u8BBE\u7F6EGit\u7528\u6237\u540D\uFF0C\u8BF7\u5148\u914D\u7F6EGit\u7528\u6237\u540D\u6216\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u6307\u5B9A"));
+                throw new Error(vscode.l10n.t("未设置Git用户名，请先配置Git用户名或在插件设置中指定"));
             }
             return username;
         }
         catch (error) {
-            throw new AppError(vscode.l10n.t("\u83B7\u53D6Git\u7528\u6237\u540D\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5Git\u914D\u7F6E"), "UNKNOWN", {
+            throw new AppError(vscode.l10n.t("获取Git用户名失败，请检查Git配置"), "UNKNOWN", {
                 stage: "getGitUsername",
                 cause: error,
             });
@@ -84,7 +84,7 @@ export class BranchCreator {
             return branches;
         }
         catch (error) {
-            throw new Error(vscode.l10n.t("\u83B7\u53D6\u5206\u652F\u5217\u8868\u5931\u8D25: {0}", String(error)));
+            throw new Error(vscode.l10n.t("获取分支列表失败: {0}", String(error)));
         }
     }
     /**
@@ -112,11 +112,11 @@ export class BranchCreator {
         try {
             if (config.autoCheckout) {
                 await this.gitOps.execGitArgs(["checkout", "-b", branchName, baseBranch]);
-                vscode.window.showInformationMessage(vscode.l10n.t("\u2713 \u6210\u529F\u521B\u5EFA\u5206\u652F: {0}", String(branchName)));
+                vscode.window.showInformationMessage(vscode.l10n.t("✓ 成功创建分支: {0}", String(branchName)));
             }
             else {
                 await this.gitOps.execGitArgs(["branch", branchName, baseBranch]);
-                vscode.window.showInformationMessage(vscode.l10n.t("\u2713 \u6210\u529F\u521B\u5EFA\u5206\u652F: {0}", String(branchName)));
+                vscode.window.showInformationMessage(vscode.l10n.t("✓ 成功创建分支: {0}", String(branchName)));
             }
             if (isRemoteBaseBranch) {
                 try {
@@ -129,7 +129,7 @@ export class BranchCreator {
             await this.gitOps.setBranchCreationBase(branchName, baseBranch);
         }
         catch (error) {
-            throw new Error(vscode.l10n.t("\u521B\u5EFA\u5206\u652F\u5931\u8D25: {0}", String(error)));
+            throw new Error(vscode.l10n.t("创建分支失败: {0}", String(error)));
         }
     }
     /**
@@ -144,7 +144,7 @@ export class BranchCreator {
     private async selectBranchPrefix(): Promise<BranchPrefix | undefined> {
         const prefixes = this.configManager.getBranchPrefixes();
         if (prefixes.length === 0) {
-            throw new Error(vscode.l10n.t("\u6CA1\u6709\u53EF\u7528\u7684\u5206\u652F\u524D\u7F00\uFF0C\u8BF7\u5148\u914D\u7F6E\u5206\u652F\u524D\u7F00"));
+            throw new Error(vscode.l10n.t("没有可用的分支前缀，请先配置分支前缀"));
         }
         // 如果只有一个前缀，直接使用
         if (prefixes.length === 1) {
@@ -158,7 +158,7 @@ export class BranchCreator {
             prefix: prefix,
         }));
         const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: vscode.l10n.t("\u9009\u62E9\u5206\u652F\u524D\u7F00"),
+            placeHolder: vscode.l10n.t("选择分支前缀"),
             matchOnDescription: true,
         });
         return selected?.prefix;
@@ -169,7 +169,7 @@ export class BranchCreator {
     private async selectBaseBranch(): Promise<string | undefined> {
         const branches = await this.getAllBranches();
         if (branches.length === 0) {
-            throw new Error(vscode.l10n.t("\u6CA1\u6709\u53EF\u7528\u7684\u5206\u652F"));
+            throw new Error(vscode.l10n.t("没有可用的分支"));
         }
         // 按本地分支优先排序
         const sortedBranches = branches.sort((a, b) => {
@@ -190,12 +190,12 @@ export class BranchCreator {
         // 创建选择项
         const items = sortedBranches.map((branch) => ({
             label: branch.name,
-            description: branch.isRemote ? vscode.l10n.t("\u8FDC\u7A0B\u5206\u652F") : vscode.l10n.t("\u672C\u5730\u5206\u652F"),
-            detail: branch.current ? vscode.l10n.t("\u5F53\u524D\u5206\u652F") : "",
+            description: branch.isRemote ? vscode.l10n.t("远程分支") : vscode.l10n.t("本地分支"),
+            detail: branch.current ? vscode.l10n.t("当前分支") : "",
             branchName: branch.name,
         }));
         const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: vscode.l10n.t("\u9009\u62E9\u57FA\u5206\u652F"),
+            placeHolder: vscode.l10n.t("选择基分支"),
             matchOnDescription: true,
         });
         return selected?.branchName;
@@ -207,11 +207,11 @@ export class BranchCreator {
         const config = this.configManager.getConfiguration();
         const currentDate = BranchUtils.formatDate(new Date(), config.dateFormat as DateFormat);
         const description = await vscode.window.showInputBox({
-            prompt: vscode.l10n.t("\u8F93\u5165\u5206\u652F\u63CF\u8FF0\u4FE1\u606F"),
-            placeHolder: vscode.l10n.t("\u4F8B\u5982\uFF1A\u7528\u6237\u767B\u5F55\u529F\u80FD"),
+            prompt: vscode.l10n.t("输入分支描述信息"),
+            placeHolder: vscode.l10n.t("例如：用户登录功能"),
             validateInput: async (value) => {
                 if (!value) {
-                    return vscode.l10n.t("\u63CF\u8FF0\u4FE1\u606F\u4E0D\u80FD\u4E3A\u7A7A");
+                    return vscode.l10n.t("描述信息不能为空");
                 }
                 const validation = BranchUtils.validateDescription(value);
                 if (!validation.isValid) {
@@ -244,16 +244,16 @@ export class BranchCreator {
             format: config.branchNameFormat,
         });
         const items = [
-            vscode.l10n.t("\u57FA\u5206\u652F: {0}", String(options.baseBranch)),
-            vscode.l10n.t("\u65B0\u5206\u652F: {0}", String(branchName)),
-            vscode.l10n.t("\u63CF\u8FF0: {0}", String(options.description)),
-            vscode.l10n.t("\u521B\u5EFA\u8005: {0}", String(options.username)),
+            vscode.l10n.t("基分支: {0}", String(options.baseBranch)),
+            vscode.l10n.t("新分支: {0}", String(branchName)),
+            vscode.l10n.t("描述: {0}", String(options.description)),
+            vscode.l10n.t("创建者: {0}", String(options.username)),
         ];
-        const confirmed = await vscode.window.showInformationMessage(vscode.l10n.t("\u786E\u8BA4\u521B\u5EFA\u5206\u652F\uFF1F"), {
+        const confirmed = await vscode.window.showInformationMessage(vscode.l10n.t("确认创建分支？"), {
             modal: true,
             detail: items.join("\n"),
-        }, vscode.l10n.t("\u786E\u8BA4"));
-        return confirmed === vscode.l10n.t("\u786E\u8BA4");
+        }, vscode.l10n.t("确认"));
+        return confirmed === vscode.l10n.t("确认");
     }
     /**
      * 主要的分支创建流程
@@ -261,24 +261,24 @@ export class BranchCreator {
     async createBranch(): Promise<BranchCreationResult> {
         try {
             if (!(await this.gitOps.checkGitRepository())) {
-                throw new Error(vscode.l10n.t("\u5F53\u524D\u76EE\u5F55\u4E0D\u662FGit\u4ED3\u5E93"));
+                throw new Error(vscode.l10n.t("当前目录不是Git仓库"));
             }
             // 步骤1: 选择分支前缀
             const selectedPrefix = await this.selectBranchPrefix();
             if (!selectedPrefix) {
-                return { success: false, error: vscode.l10n.t("\u672A\u9009\u62E9\u5206\u652F\u524D\u7F00") };
+                return { success: false, error: vscode.l10n.t("未选择分支前缀") };
             }
             // 步骤2: 选择基分支
             const baseBranch = await this.selectBaseBranch();
             if (!baseBranch) {
-                return { success: false, error: vscode.l10n.t("\u672A\u9009\u62E9\u57FA\u5206\u652F") };
+                return { success: false, error: vscode.l10n.t("未选择基分支") };
             }
             // 步骤3: 获取用户名
             const username = await this.getGitUsername();
             // 步骤4: 输入描述信息
             const description = await this.inputBranchDescription(selectedPrefix.prefix, username);
             if (!description) {
-                return { success: false, error: vscode.l10n.t("\u672A\u8F93\u5165\u63CF\u8FF0\u4FE1\u606F") };
+                return { success: false, error: vscode.l10n.t("未输入描述信息") };
             }
             // 步骤5: 生成分支名称
             const config = this.configManager.getConfiguration();
@@ -296,39 +296,39 @@ export class BranchCreator {
             });
             const branchValidation = await this.gitOps.validateBranchNameWithGit(configuredBranchName);
             if (!branchValidation.isValid) {
-                throw new AppError(branchValidation.error || vscode.l10n.t("\u5206\u652F\u540D\u4E0D\u5408\u6CD5"), "UNKNOWN", {
+                throw new AppError(branchValidation.error || vscode.l10n.t("分支名不合法"), "UNKNOWN", {
                     stage: "createBranch",
                 });
             }
             // 步骤6: 检查分支是否存在
             const exists = await this.branchExists(configuredBranchName);
             if (exists) {
-                const action = await vscode.window.showWarningMessage(vscode.l10n.t("\u5206\u652F {0} \u5DF2\u5B58\u5728", String(configuredBranchName)), vscode.l10n.t("\u5207\u6362\u5230\u8BE5\u5206\u652F"), vscode.l10n.t("\u91CD\u65B0\u8F93\u5165"), vscode.l10n.t("\u53D6\u6D88"));
-                if (action === vscode.l10n.t("\u5207\u6362\u5230\u8BE5\u5206\u652F")) {
+                const action = await vscode.window.showWarningMessage(vscode.l10n.t("分支 {0} 已存在", String(configuredBranchName)), vscode.l10n.t("切换到该分支"), vscode.l10n.t("重新输入"), vscode.l10n.t("取消"));
+                if (action === vscode.l10n.t("切换到该分支")) {
                     await this.checkoutBranch(configuredBranchName);
                     return { success: true, branchName: configuredBranchName };
                 }
-                else if (action === vscode.l10n.t("\u91CD\u65B0\u8F93\u5165")) {
+                else if (action === vscode.l10n.t("重新输入")) {
                     return await this.createBranch();
                 }
                 else {
-                    return { success: false, error: vscode.l10n.t("\u53D6\u6D88\u521B\u5EFA") };
+                    return { success: false, error: vscode.l10n.t("取消创建") };
                 }
             }
             // 步骤7: 确认创建
             const confirmed = await this.confirmBranchCreation(branchCreationOptions);
             if (!confirmed) {
-                return { success: false, error: vscode.l10n.t("\u7528\u6237\u53D6\u6D88\u521B\u5EFA") };
+                return { success: false, error: vscode.l10n.t("用户取消创建") };
             }
             // 步骤8: 创建分支
             await this.createAndCheckoutBranch(configuredBranchName, baseBranch);
             return { success: true, branchName: configuredBranchName };
         }
         catch (error) {
-            console.error(vscode.l10n.t("\u521B\u5EFA\u5206\u652F\u5931\u8D25:"), error);
+            console.error(vscode.l10n.t("创建分支失败:"), error);
             const errorMessage = error instanceof Error ? error.message : String(error);
             if (!isUserCancelledError(error)) {
-                vscode.window.showErrorMessage(vscode.l10n.t("\u521B\u5EFA\u5206\u652F\u5931\u8D25: {0}", String(errorMessage)));
+                vscode.window.showErrorMessage(vscode.l10n.t("创建分支失败: {0}", String(errorMessage)));
             }
             return { success: false, error: errorMessage };
         }

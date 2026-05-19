@@ -59,13 +59,13 @@ export class GitOperations {
                 encoding: "utf8",
             });
             if (stderr && !stderr.includes("warning")) {
-                console.warn(vscode.l10n.t("Git\u547D\u4EE4\u8B66\u544A:"), stderr);
+                console.warn(vscode.l10n.t("Git命令警告:"), stderr);
             }
             return stdout.trim();
         }
         catch (error: any) {
-            const errorMessage = error.stderr || error.message || vscode.l10n.t("\u672A\u77E5\u9519\u8BEF");
-            throw AppError.gitFailed(vscode.l10n.t("Git\u547D\u4EE4\u6267\u884C\u5931\u8D25: {0}", String(errorMessage)), "execGitCommand", error);
+            const errorMessage = error.stderr || error.message || vscode.l10n.t("未知错误");
+            throw AppError.gitFailed(vscode.l10n.t("Git命令执行失败: {0}", String(errorMessage)), "execGitCommand", error);
         }
     }
     /**
@@ -78,14 +78,14 @@ export class GitOperations {
                 encoding: "utf8",
             });
             if (stderr && !stderr.includes("warning")) {
-                console.warn(vscode.l10n.t("Git\u547D\u4EE4\u8B66\u544A:"), stderr);
+                console.warn(vscode.l10n.t("Git命令警告:"), stderr);
             }
             return stdout.trim();
         }
         catch (error: any) {
-            const errorMessage = error.stderr || error.message || vscode.l10n.t("\u672A\u77E5\u9519\u8BEF");
+            const errorMessage = error.stderr || error.message || vscode.l10n.t("未知错误");
             const renderedArgs = args.join(" ");
-            throw AppError.gitFailed(vscode.l10n.t("Git\u547D\u4EE4\u6267\u884C\u5931\u8D25(git {0}): {1}", String(renderedArgs), String(errorMessage)), "execGitArgs", error);
+            throw AppError.gitFailed(vscode.l10n.t("Git命令执行失败(git {0}): {1}", String(renderedArgs), String(errorMessage)), "execGitArgs", error);
         }
     }
     /**
@@ -247,15 +247,15 @@ export class GitOperations {
         error?: string;
     }> {
         if (!branchName || branchName.trim().length === 0) {
-            return { isValid: false, error: vscode.l10n.t("\u5206\u652F\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A") };
+            return { isValid: false, error: vscode.l10n.t("分支名称不能为空") };
         }
         try {
             await this.execGitArgs(["check-ref-format", "--branch", branchName]);
             return { isValid: true };
         }
         catch (error: any) {
-            const message = error?.message || vscode.l10n.t("\u5206\u652F\u540D\u79F0\u4E0D\u7B26\u5408Git\u89C4\u5219");
-            return { isValid: false, error: vscode.l10n.t("\u5206\u652F\u540D\u4E0D\u5408\u6CD5: {0}", String(message)) };
+            const message = error?.message || vscode.l10n.t("分支名称不符合Git规则");
+            return { isValid: false, error: vscode.l10n.t("分支名不合法: {0}", String(message)) };
         }
     }
     /**
@@ -281,7 +281,7 @@ export class GitOperations {
             else {
                 // 只有显式提供 baseRef 时才允许创建新分支，避免误从当前分支派生
                 if (!baseRef) {
-                    throw new AppError(vscode.l10n.t("\u5206\u652F {0} \u5728\u672C\u5730\u548C\u8FDC\u7A0B\u5747\u4E0D\u5B58\u5728\uFF0C\u5DF2\u963B\u6B62\u81EA\u52A8\u521B\u5EFA", String(branchName)), "UNKNOWN", { stage: "checkoutBranch" });
+                    throw new AppError(vscode.l10n.t("分支 {0} 在本地和远程均不存在，已阻止自动创建", String(branchName)), "UNKNOWN", { stage: "checkoutBranch" });
                 }
                 await this.execGitArgs(["checkout", "-b", branchName, baseRef]);
             }
@@ -458,7 +458,7 @@ export class GitOperations {
                     : String(error);
             const lower = message.toLowerCase();
             if (lower.includes("empty") ||
-                lower.includes(vscode.l10n.t("\u4E3A\u7A7A")) ||
+                lower.includes(vscode.l10n.t("为空")) ||
                 lower.includes("now empty")) {
                 return "empty";
             }
@@ -466,7 +466,7 @@ export class GitOperations {
                 (await this.isCherryPickInProgress())) {
                 return "conflicts";
             }
-            throw AppError.gitFailed(vscode.l10n.t("Cherry-pick \u5931\u8D25: {0}", String(message)), "cherryPickCommit", error);
+            throw AppError.gitFailed(vscode.l10n.t("Cherry-pick 失败: {0}", String(message)), "cherryPickCommit", error);
         }
     }
     async continueRebase(): Promise<void> {
@@ -475,12 +475,12 @@ export class GitOperations {
     /**
      * 合并冲突解决后完成 merge 提交
      */
-    async completeMergeAfterConflicts(commitMessage: string = vscode.l10n.t("feat: \u5408\u5E76\u51B2\u7A81\u89E3\u51B3")): Promise<void> {
+    async completeMergeAfterConflicts(commitMessage: string = vscode.l10n.t("feat: 合并冲突解决")): Promise<void> {
         if (!(await this.isMergeInProgress())) {
             return;
         }
         if (await this.checkMergeConflicts()) {
-            throw new AppError(vscode.l10n.t("\u4ECD\u5B58\u5728\u672A\u89E3\u51B3\u7684\u51B2\u7A81"), "UNKNOWN", {
+            throw new AppError(vscode.l10n.t("仍存在未解决的冲突"), "UNKNOWN", {
                 stage: "completeMergeAfterConflicts",
             });
         }
@@ -682,7 +682,7 @@ export class GitOperations {
                     conflictFiles: await this.getConflictFiles(),
                 };
             }
-            throw AppError.gitFailed(vscode.l10n.t("\u542F\u52A8 revert \u5931\u8D25"), "revertMergeCommitSafe");
+            throw AppError.gitFailed(vscode.l10n.t("启动 revert 失败"), "revertMergeCommitSafe");
         }
         if (await this.checkMergeConflicts()) {
             return {

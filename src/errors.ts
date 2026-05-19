@@ -21,7 +21,7 @@ export class AppError extends Error {
         return new AppError(message, "GIT_COMMAND_FAILED", { stage, cause });
     }
 }
-export function toAppError(error: unknown, fallbackMessage = vscode.l10n.t("\u672A\u77E5\u9519\u8BEF")): AppError {
+export function toAppError(error: unknown, fallbackMessage = vscode.l10n.t("未知错误")): AppError {
     if (error instanceof AppError) {
         return error;
     }
@@ -57,5 +57,5 @@ export function isUserCancelledError(error: unknown): boolean {
         return true;
     }
     const message = error instanceof Error ? error.message : String(error || "");
-    return message.includes(vscode.l10n.t("\u53D6\u6D88"));
+    return message.includes(vscode.l10n.t("取消"));
 }
