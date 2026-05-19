@@ -2,7 +2,7 @@
   "name": "git-workflow-helper",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "publisher": "Leo-Wei105",
   "repository": {
     "type": "git",
