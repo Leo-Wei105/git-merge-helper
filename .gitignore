@@ -2,3 +2,6 @@
 *.vsix
 /out
 /.idea
+.DS_Store
+temp_vsix/
+temp.zip

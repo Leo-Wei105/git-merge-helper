@@ -14,12 +14,24 @@ tsconfig.json
 .gitignore
 .yarnrc
 
-# 文档文件（保留README.md，其他可选）
+# 文档文件（保留README.md和CHANGELOG.md，排除中文副本）
 BUILD.md
 USAGE.md
 README_OTHER.md
 IMPROVEMENTS.md
 SUMMARY.md
+README.zh-CN.md
+CHANGELOG.zh-CN.md
+
+# 开发辅助脚本（i18n生成、检测等，运行时不需要）
+check-mojibake.js
+check-zh.js
+gen-l10n.js
+i18n-extract.json
+i18n-pkg.js
+transform-i18n.js
+unescape.js
+update-docs.js
 
 # 脚本文件（开发时使用）
 scripts/**
@@ -34,5 +46,12 @@ node_modules/**
 # 已生成的VSIX包文件
 *.vsix
 
+# 临时文件
+temp_vsix/**
+temp.zip
+
+# macOS系统文件
+.DS_Store
+
 # 其他开发文件
-vsc-extension-quickstart.md 
+vsc-extension-quickstart.md
