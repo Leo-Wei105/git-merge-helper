@@ -1,7 +1,7 @@
 {
   "name": "git-workflow-helper",
-  "displayName": "Git工作流助手",
-  "description": "Git 工作流：规范分支、引导合并、格式化提交（Conventional Commits）、冲突处理、批量 cherry-pick、merge 回滚与 force-with-lease。",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
   "version": "0.4.0",
   "publisher": "Leo-Wei105",
   "repository": {
@@ -23,7 +23,7 @@
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
-      "title": "Git工作流助手",
+      "title": "%config.title.25%",
       "properties": {
         "gitWorkflowHelper.targetBranches": {
           "type": "array",
@@ -34,8 +34,8 @@
           "items": {
             "type": "string"
           },
-          "description": "可选的目标分支列表，支持自定义添加更多分支。例如：`[\"uat\", \"pre\", \"prod\"]`",
-          "markdownDescription": "可选的目标分支列表，支持自定义添加更多分支\n\n示例：`[\"uat\", \"pre\", \"prod\"]`\n\n可以直接在设置页面中添加、删除和编辑项"
+          "description": "%config.properties.gitWorkflowHelper.targetBranches.description.26%",
+          "markdownDescription": "%config.properties.gitWorkflowHelper.targetBranches.markdownDescription.27%"
         },
         "gitWorkflowHelper.branchPrefixes": {
           "type": "array",
@@ -49,18 +49,18 @@
           "items": {
             "type": "string"
           },
-          "description": "分支前缀配置，用于创建标准化命名的分支。例如：`[\"feature\", \"bugfix\", \"hotfix\"]`",
-          "markdownDescription": "分支前缀配置，用于创建标准化命名的分支\n\n示例：`[\"feature\", \"bugfix\", \"hotfix\"]`\n\n可以直接在设置页面中添加、删除和编辑项"
+          "description": "%config.properties.gitWorkflowHelper.branchPrefixes.description.28%",
+          "markdownDescription": "%config.properties.gitWorkflowHelper.branchPrefixes.markdownDescription.29%"
         },
         "gitWorkflowHelper.customGitName": {
           "type": "string",
           "default": "",
-          "description": "自定义Git用户名（留空则使用Git配置），用于分支命名"
+          "description": "%config.properties.gitWorkflowHelper.customGitName.description.30%"
         },
         "gitWorkflowHelper.dateFormat": {
           "type": "string",
           "default": "yyyyMMdd",
-          "description": "分支命名中的日期格式",
+          "description": "%config.properties.gitWorkflowHelper.dateFormat.description.31%",
           "enum": [
             "yyyyMMdd",
             "yyyy-MM-dd",
@@ -70,7 +70,7 @@
         "gitWorkflowHelper.branchNameFormat": {
           "type": "string",
           "default": "{prefix}/{date}/{description}_{username}",
-          "description": "自定义分支名称模板。仅在“分支命名模板预设”选择“自定义模板”时生效。支持占位符：{prefix}、{date}、{description}、{username}"
+          "description": "%config.properties.gitWorkflowHelper.branchNameFormat.description.32%"
         },
         "gitWorkflowHelper.branchNameTemplatePreset": {
           "type": "string",
@@ -85,44 +85,44 @@
             "custom"
           ],
           "enumItemLabels": [
-            "默认模板：{prefix}/{date}/{description}_{username}",
+            "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.enumItemLabels.0.33%",
             "GitFlow：{prefix}/{description}",
-            "日期优先：{date}/{prefix}/{description}",
-            "用户名优先：{username}/{prefix}/{description}",
-            "发布模板：release/{date}/{description}",
-            "单号风格：{prefix}/{description}-{username}",
-            "自定义模板（使用 branchNameFormat）"
+            "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.enumItemLabels.2.34%",
+            "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.enumItemLabels.3.35%",
+            "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.enumItemLabels.4.36%",
+            "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.enumItemLabels.5.37%",
+            "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.enumItemLabels.6.38%"
           ],
-          "description": "分支命名模板预设，可在设置中快捷选择"
+          "description": "%config.properties.gitWorkflowHelper.branchNameTemplatePreset.description.39%"
         },
         "gitWorkflowHelper.autoCheckout": {
           "type": "boolean",
           "default": true,
-          "description": "创建分支后自动切换到新分支"
+          "description": "%config.properties.gitWorkflowHelper.autoCheckout.description.40%"
         },
         "gitWorkflowHelper.maxConflictFilesToOpen": {
           "type": "number",
           "default": 5,
           "minimum": 1,
           "maximum": 20,
-          "description": "合并冲突时批量打开文件的最大数量（1-20）"
+          "description": "%config.properties.gitWorkflowHelper.maxConflictFilesToOpen.description.41%"
         },
         "gitWorkflowHelper.skipHooksOnRevert": {
           "type": "boolean",
           "default": false,
-          "description": "使用 revert 回滚时，是否始终跳过 pre-commit 等 Git 钩子（--no-verify）"
+          "description": "%config.properties.gitWorkflowHelper.skipHooksOnRevert.description.42%"
         },
         "gitWorkflowHelper.maxCherryPickCommitsToList": {
           "type": "number",
           "default": 50,
           "minimum": 10,
           "maximum": 200,
-          "description": "批量优选时列表展示的最多提交数量（10-200）"
+          "description": "%config.properties.gitWorkflowHelper.maxCherryPickCommitsToList.description.43%"
         },
         "gitWorkflowHelper.cherryPickRecordOrigin": {
           "type": "boolean",
           "default": true,
-          "description": "批量 cherry-pick 时使用 -x 在提交信息中记录来源"
+          "description": "%config.properties.gitWorkflowHelper.cherryPickRecordOrigin.description.44%"
         },
         "gitWorkflowHelper.cherryPickFilterPriority": {
           "type": "array",
@@ -141,7 +141,7 @@
               "keyword"
             ]
           },
-          "description": "高级：merge/author/time 过滤的应用顺序。关键字在提交列表顶栏搜索框输入，无需配置"
+          "description": "%config.properties.gitWorkflowHelper.cherryPickFilterPriority.description.45%"
         },
         "gitWorkflowHelper.mergeRollbackStrategy": {
           "type": "string",
@@ -152,17 +152,17 @@
             "ask"
           ],
           "enumDescriptions": [
-            "git reset --hard 到 merge 前（仅当 merge 为分支最新提交时可用，不新增 revert 提交）",
-            "git revert -m 1 生成反向提交（保留历史，适合 merge 之后还有提交或已推送）",
-            "每次回滚前询问选择 reset 或 revert"
+            "%config.properties.gitWorkflowHelper.mergeRollbackStrategy.enumDescriptions.0.46%",
+            "%config.properties.gitWorkflowHelper.mergeRollbackStrategy.enumDescriptions.1.47%",
+            "%config.properties.gitWorkflowHelper.mergeRollbackStrategy.enumDescriptions.2.48%"
           ],
-          "description": "回滚「合入当前分支的合并」时采用的方式（默认 reset，非 revert）"
+          "description": "%config.properties.gitWorkflowHelper.mergeRollbackStrategy.description.49%"
         },
         "gitWorkflowHelper.commitTemplates": {
           "type": "array",
           "default": [],
-          "description": "自定义提交信息模板。可为字符串（如 \"ci: {description}\"）或对象（id、name、description、template）",
-          "markdownDescription": "自定义提交信息模板，与内置 Conventional Commits 模板一起出现在「格式化提交」中。\n\n- 字符串：`\"ci: {description}\"`\n- 对象：`{ \"id\": \"ci\", \"name\": \"CI\", \"template\": \"ci: {description}\" }`\n\n占位符：`{description}`、`{scope}`、`{ticket}`、`{username}`",
+          "description": "%config.properties.gitWorkflowHelper.commitTemplates.description.50%",
+          "markdownDescription": "%config.properties.gitWorkflowHelper.commitTemplates.markdownDescription.51%",
           "items": {
             "oneOf": [
               {
@@ -194,76 +194,76 @@
         "gitWorkflowHelper.defaultCommitTemplateId": {
           "type": "string",
           "default": "feat",
-          "description": "格式化提交时默认高亮的模板 id（内置如 feat、fix；或自定义模板的 id）"
+          "description": "%config.properties.gitWorkflowHelper.defaultCommitTemplateId.description.52%"
         }
       }
     },
     "commands": [
       {
         "command": "gitWorkflowHelper.pullAllBranches",
-        "title": "一键拉取所有本地分支",
-        "category": "Git工作流助手"
+        "title": "%command.0.title.1%",
+        "category": "%command.0.category.2%"
       },
       {
         "command": "gitWorkflowHelper.createBranch",
-        "title": "创建功能分支",
-        "category": "Git工作流助手"
+        "title": "%command.1.title.3%",
+        "category": "%command.1.category.4%"
       },
       {
         "command": "gitWorkflowHelper.mergeFeatureBranch",
-        "title": "合并功能分支",
-        "category": "Git工作流助手"
+        "title": "%command.2.title.5%",
+        "category": "%command.2.category.6%"
       },
       {
         "command": "gitWorkflowHelper.rollbackLastMerge",
-        "title": "回滚合入当前分支的合并",
-        "category": "Git工作流助手"
+        "title": "%command.3.title.7%",
+        "category": "%command.3.category.8%"
       },
       {
         "command": "gitWorkflowHelper.showBranchBase",
-        "title": "查看当前分支基分支",
-        "category": "Git工作流助手"
+        "title": "%command.4.title.9%",
+        "category": "%command.4.category.10%"
       },
       {
         "command": "gitWorkflowHelper.pushForceWithLease",
-        "title": "强制推送（force-with-lease）",
-        "category": "Git工作流助手"
+        "title": "%command.5.title.11%",
+        "category": "%command.5.category.12%"
       },
       {
         "command": "gitWorkflowHelper.resolveConflicts",
-        "title": "处理 Git 冲突",
-        "category": "Git工作流助手"
+        "title": "%command.6.title.13%",
+        "category": "%command.6.category.14%"
       },
       {
         "command": "gitWorkflowHelper.batchCherryPick",
-        "title": "批量 Cherry-pick（优选）",
-        "category": "Git工作流助手"
+        "title": "%command.7.title.15%",
+        "category": "%command.7.category.16%"
       },
       {
         "command": "gitWorkflowHelper.formattedCommit",
-        "title": "格式化提交",
-        "category": "Git工作流助手"
+        "title": "%command.8.title.17%",
+        "category": "%command.8.category.18%"
       },
       {
         "command": "gitWorkflowHelper.copyFormattedCommitMessage",
-        "title": "复制格式化提交信息",
-        "category": "Git工作流助手"
+        "title": "%command.9.title.19%",
+        "category": "%command.9.category.20%"
       },
       {
         "command": "gitWorkflowHelper.manageConfiguration",
-        "title": "配置管理",
-        "category": "Git工作流助手"
+        "title": "%command.10.title.21%",
+        "category": "%command.10.category.22%"
       },
       {
         "command": "gitWorkflowHelper.manageGlobalGitConfig",
-        "title": "查看/修改全局 Git 配置",
-        "category": "Git工作流助手"
+        "title": "%command.11.title.23%",
+        "category": "%command.11.category.24%"
       }
     ],
     "submenus": [
       {
         "id": "gitWorkflowHelper.context",
-        "label": "Git工作流助手"
+        "label": "%submenu.0.label.53%"
       }
     ],
     "keybindings": [
