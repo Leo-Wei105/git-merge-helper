@@ -1,102 +1,109 @@
-# Changelog
+# 更新日志
 
-[中文更新日志](./CHANGELOG.zh-CN.md)
+[English](./CHANGELOG.en.md)
 
-All notable changes to this project will be documented in this file (format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)).
+本项目的所有重要变更均记录在此文件（格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)）。
+
+## [0.6.0] - 2026-05-19
+
+### 变更
+
+- **默认语言切换为中文**：插件的默认语言从英文改为中文，包括命令名称、配置项描述、运行时提示等。英文用户通过 VS Code 语言设置自动加载英文语言包。
+- **文档默认中文**：`README.md` 和 `CHANGELOG.md` 默认显示中文内容，英文版本移至 `README.en.md` 和 `CHANGELOG.en.md`。
+- **文件清理**：移除冗余的 `package.nls.zh-cn.json`、`l10n/bundle.l10n.zh-cn.json`、`README.zh-CN.md`、`CHANGELOG.zh-CN.md` 等重复文件，精简项目结构。
 
 ## [0.5.4] - 2026-05-19
 
-### Changed
+### 变更
 
-- **Documentation Alignment**: Fully aligned English and Chinese README content — added missing Configuration Reference, Project Structure, Local Development & Packaging, Troubleshooting, Disclaimer, and Version & Changelog sections to the English README.
-- **Changelog Backfill**: Added missing changelog entries for versions 0.5.2 and 0.5.3.
+- **中英文文档对齐**：全面对齐英文与中文 README 内容——为英文 README 补齐缺失的配置项说明、项目结构、本地开发与打包、故障排除、免责声明和版本与更新日志等章节。
+- **补全更新日志**：补充了 0.5.2 和 0.5.3 版本缺失的更新日志条目。
 
-### Fixed
+### 修复
 
-- **Chinese README**: Added missing `[English]` navigation link; corrected stale version reference from `0.5.1` to `0.5.4`.
+- **中文 README**：添加了缺失的 `[English]` 导航链接；修正了过时的版本引用（从 `0.5.1` 更新为 `0.5.4`）。
 
 ## [0.5.3] - 2026-05-19
 
-### Changed
+### 变更
 
-- **Packaging Cleanup**: Updated `.vscodeignore` to exclude development scripts (`check-mojibake.js`, `gen-l10n.js`, `i18n-extract.json`, etc.), Chinese documentation duplicates (`README.zh-CN.md`, `CHANGELOG.zh-CN.md`), temporary files, and macOS `.DS_Store` — resulting in a smaller, cleaner `.vsix` package.
-- **Gitignore**: Added `.DS_Store`, `temp_vsix/`, and `temp.zip` to `.gitignore`.
+- **打包配置清理**：更新 `.vscodeignore`，排除开发脚本（`check-mojibake.js`、`gen-l10n.js`、`i18n-extract.json` 等）、中文文档副本（`README.zh-CN.md`、`CHANGELOG.zh-CN.md`）、临时文件及 macOS `.DS_Store`——使 `.vsix` 包更小更干净。
+- **Gitignore 更新**：将 `.DS_Store`、`temp_vsix/`、`temp.zip` 加入 `.gitignore`。
 
 ## [0.5.2] - 2026-05-19
 
-### Changed
+### 变更
 
-- **Version Bump**: Patch version bump (no functional changes).
+- **版本号升级**：补丁版本升级（无功能变更）。
 
 ## [0.5.1] - 2026-05-19
 
-### Fixed
+### 修复
 
-- **Marketplace Localization**: Split `CHANGELOG.md` into English and Chinese versions to ensure the extension marketplace displays an English changelog by default.
+- **市场页面多语言**：将 `CHANGELOG.md` 拆分为中英双语，修复了扩展市场详情页默认显示中文更新日志的问题，改为默认英文并提供中文跳转。
 
 ## [0.5.0] - 2026-05-19
 
-### Added
+### 新增
 
-- **Internationalization (i18n) Support**:
-  - Command names, configuration items, etc., in `package.json` now automatically switch between English and Chinese environments.
-  - Comprehensive internationalization for internal code prompts and dialogs (`vscode.l10n`).
-  - Documentation refactoring: Provided an English main `README.md`, accompanied by a Chinese `README.zh-CN.md`.
+- **国际化多语言支持 (i18n)**：
+  - package.json 中的命令名称、设置项等支持中英文环境自动切换。
+  - 代码内部提示和弹窗实现全面国际化支持 (vscode.l10n)。
+  - 文档重构：提供全英文主 README.md，并附带中文 README.zh-CN.md。
 
 ## [0.4.0] - 2026-05-19
 
-### Added
+### 新增
 
-- **View and Modify Global Git Config**: Provided a graphical interface (QuickPick and InputBox) to view and modify common global Git configurations (such as `user.name`, `user.email`, `core.autocrlf`, `init.defaultBranch`), with support for clearing configurations.
+- **查看并修改全局 Git 配置**：提供图形化界面（QuickPick 和 InputBox），用于查看和修改常用的全局 Git 配置（如 `user.name`、`user.email`、`core.autocrlf`、`init.defaultBranch`），支持清空配置。
 
 ## [0.3.0] - 2026-05-18
 
-### Added
+### 新增
 
-- **Pull All Local Branches**: Automatically fetch the latest remote information and safely update all non-diverged local tracking branches. The current branch uses `merge --ff-only`, while other branches update their references directly, making it both fast and safe. Skips branches that are already up-to-date or diverged, and displays a report panel upon completion.
+- **一键拉取所有本地分支**：自动 fetch 最新远端信息，并智能且安全地更新所有未分叉的本地关联分支，当前分支使用 `merge --ff-only`，其他分支通过直接更新引用实现，既快又安全。支持自动跳过已更新或存在分叉的分支，并在完成后显示报告面板。
 
 ## [0.2.1] - 2026-05-18
 
-### Fixed
+### 修复
 
-- **Configuration Management**: Fixed an issue where clicking "Manage Configuration" in large multi-root workspaces caused severe UI lag or freezing in the VS Code Settings page due to the `@ext:` filter. Changed to search directly via the configuration prefix `gitWorkflowHelper`, significantly improving opening speed and avoiding performance issues.
+- **配置管理**：修复在大型项目工作区中点击“配置管理”打开设置时，因使用 `@ext:` 筛选器导致 VS Code 设置界面严重卡顿或卡死的问题。改为直接通过配置前缀 `gitWorkflowHelper` 搜索，大幅提升打开速度并避免性能问题。
 
 ## [0.2.0] - 2026-05-18
+### 新增
 
-### Added
+- **格式化提交**：Conventional Commits 风格内置模板（feat、fix、docs、refactor 等），支持自定义模板（`commitTemplates`）与默认模板 id（`defaultCommitTemplateId`）；命令「格式化提交」「复制格式化提交信息」。
+- **批量 Cherry-pick（优选）**：从源分支多选提交并依次 cherry-pick，支持推荐/自定义/全部三种入口与列表内搜索。
+- **处理 Git 冲突**：统一识别 merge / revert / cherry-pick / rebase 冲突，提供打开合并编辑器、取消操作、已解决继续等引导。
+- **回滚合入当前分支的合并**：按 first-parent 定位最近一次 merge，支持 `reset` / `revert` / 每次询问（`mergeRollbackStrategy`）。
+- **查看当前分支基分支**：创建分支时记录基分支，并支持 reflog 推断。
+- **强制推送（force-with-lease）**：安全强推当前分支到远程。
+- **右键与子菜单**：资源管理器、编辑器、SCM 资源上下文中的「Git工作流助手」子菜单；SCM 标题栏快捷命令。
 
-- **Formatted Commit**: Built-in Conventional Commits templates (`feat`, `fix`, `docs`, `refactor`, etc.), supporting custom templates (`commitTemplates`) and default template ID (`defaultCommitTemplateId`); added commands "Formatted Commit" and "Copy Formatted Commit Message".
-- **Batch Cherry-pick**: Multi-select commits from a source branch and sequentially cherry-pick them. Supports recommended/custom/all entry points and search within the list.
-- **Resolve Git Conflicts**: Unified recognition of merge / revert / cherry-pick / rebase conflicts, providing guides to open the merge editor, cancel the operation, or mark as resolved and continue.
-- **Rollback Last Merge**: Locates the most recent merge (first-parent) and supports `reset` / `revert` / ask each time (`mergeRollbackStrategy`).
-- **Show Current Branch Base**: Records the base branch when creating a branch and supports reflog inference.
-- **Force Push (force-with-lease)**: Safely force push the current branch to remote.
-- **Context Menus & Submenus**: "Git Workflow Helper" submenus in Explorer, Editor, and SCM resource context; inline shortcut commands in the SCM title bar.
+### 变更
 
-### Changed
+- 合并流程中遇到未提交更改时，改用格式化提交模板，不再写死 `feat:` 前缀。
+- Revert 回滚 merge 时支持冲突预检与可选跳过钩子（`skipHooksOnRevert`）；修正 `revert --continue` 与 `--no-verify` 的用法。
+- 命令归类为「Git工作流助手」类别，标题与对话框文案精简。
 
-- When encountering uncommitted changes during the merge process, it now uses the formatted commit template instead of hardcoding the `feat:` prefix.
-- Revert rollback of a merge now supports pre-checking for conflicts and optionally skipping hooks (`skipHooksOnRevert`); fixed usage of `revert --continue` and `--no-verify`.
-- Commands categorized under "Git Workflow Helper", with simplified titles and dialog text.
+### 配置
 
-### Configurations
-
-- `gitWorkflowHelper.commitTemplates`, `defaultCommitTemplateId`
-- `gitWorkflowHelper.mergeRollbackStrategy`, `skipHooksOnRevert`
-- `gitWorkflowHelper.maxCherryPickCommitsToList`, `cherryPickRecordOrigin`, `cherryPickFilterPriority`
+- `gitWorkflowHelper.commitTemplates`、`defaultCommitTemplateId`
+- `gitWorkflowHelper.mergeRollbackStrategy`、`skipHooksOnRevert`
+- `gitWorkflowHelper.maxCherryPickCommitsToList`、`cherryPickRecordOrigin`、`cherryPickFilterPriority`
 
 ## [0.1.2] - 2026-05-14
 
-### Changed
+### 变更
 
-- **Configuration Management**: When running "Git Workflow Helper: Manage Configuration" in a "multi-root workspace", it now opens the **User Settings** GUI and automatically filters for this extension (`@ext:Leo-Wei105.git-workflow-helper`), mitigating UI lag; single-folder workspaces continue to use default behavior.
-- Added `src/openExtensionSettings.ts` to encapsulate the above logic; `GitMergeService.manageConfiguration` behaves consistently with the command.
+- **配置管理**：在「多文件夹工作区」或「已保存的 `.code-workspace` 工作区」下，执行「Git工作流助手: 配置管理」时，改为打开 **用户设置** 的图形界面，并自动筛选本扩展（`@ext:Leo-Wei105.git-workflow-helper`），减轻多作用域设置页卡顿；单文件夹且非 `.code-workspace` 打开时仍为默认「打开设置」并筛选本扩展。
+- 新增 `src/openExtensionSettings.ts` 封装上述打开策略；`GitMergeService.manageConfiguration` 与命令行为一致。
 
-### Documentation
+### 文档
 
-- Rewrote `README.md` (Features, Configurations, Troubleshooting, Version Info); added **GitHub Repository and Issues** links; added **Disclaimer**.
-- Updated extension description in `package.json`.
+- 重写 `README.md`（功能说明、配置表、故障排除、版本信息）；补充 **GitHub 仓库与 Issues** 链接；新增 **免责声明**。
+- 更新 `package.json` 中的扩展描述（`description`）。
 
-## [0.1.0] and earlier
+## [0.1.0] 及更早
 
-- Early versions did not maintain a separate changelog in this repository; please refer to the corresponding Git tags or commit history.
+- 早期版本未在此仓库中维护独立更新日志；请参考对应 Git 标签或提交历史。

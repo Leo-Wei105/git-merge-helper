@@ -14,14 +14,14 @@ tsconfig.json
 .gitignore
 .yarnrc
 
-# 文档文件（保留README.md和CHANGELOG.md，排除中文副本）
+# 文档文件（保留README.md和CHANGELOG.md中文版，排除英文副本）
 BUILD.md
 USAGE.md
 README_OTHER.md
 IMPROVEMENTS.md
 SUMMARY.md
-README.zh-CN.md
-CHANGELOG.zh-CN.md
+README.en.md
+CHANGELOG.en.md
 
 # 开发辅助脚本（i18n生成、检测等，运行时不需要）
 check-mojibake.js
